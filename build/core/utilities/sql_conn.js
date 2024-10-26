@@ -17,7 +17,6 @@ const pgConfig = process.env.PGHOST !== undefined
             rejectUnauthorized: false,
         },
     };
-console.dir(pgConfig);
 const pool = new pg_1.Pool(pgConfig);
 exports.pool = pool;
 //# sourceMappingURL=sql_conn.js.map

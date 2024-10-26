@@ -10,12 +10,12 @@ const app = (0, express_1.default)();
 const PORT = parseInt(process.env.PORT) || 4001;
 app.use((0, cors_1.default)());
 /*
- * This middleware function parses JASON in the body of POST requests
+ * This middleware function parses JSON in the body of POST requests
  */
 app.use(express_1.default.json());
 app.use(routes_1.routes);
 app.get('/', (request, response) => {
-    response.send('Hello World!');
+    response.send('<h1>Hello World!</h1>');
 });
 app.listen(PORT, () => {
     return console.log(`Express is listening at http://localhost:${PORT}`);

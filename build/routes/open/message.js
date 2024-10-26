@@ -6,106 +6,206 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.messageRouter = void 0;
 //express is the framework we're going to use to handle requests
 const express_1 = __importDefault(require("express"));
-//Access the connection to Postgress Database
+//Access the connection to Postgres Database
 const utilities_1 = require("../../core/utilities");
 const messageRouter = express_1.default.Router();
 exports.messageRouter = messageRouter;
 const isStringProvided = utilities_1.validationFunctions.isStringProvided;
-/**
- * @apiDefine JSONError
- * @apiError (400: JSON Error) {String} message "malformed JSON in parameters"
- */
-/**
- * @api {post} /demosql Request to add someone's name to the DB
- * @apiName PostDemoSql
- * @apiGroup DemoSql
- *
- * @apiBody {String} name someone's name *unique
- * @apiBody {String} message a message to store with the name
- *
- * @apiSuccess (Success 201) {boolean} success true when the name is inserted
- * @apiSuccess (Success 201) {String} message the string "Inserted: ***name***" where ***name*** corresponds
- * to the parameter string name.
- *
- * @apiError (400: Name exists) {String} message "Name exists"
- *
- * @apiError (400: Missing Parameters) {String} message "Missing required information"
- *
- * @apiUse JSONError
- */
-messageRouter.post('/', (request, response, next) => {
+const format = (resultRow) => `{${resultRow.priority}} - [${resultRow.name}] says: ${resultRow.message}`;
+function mwValidPriorityQuery(request, response, next) {
+    const priority = request.query.priority;
+    if (utilities_1.validationFunctions.isNumberProvided(priority) &&
+        parseInt(priority) >= 1 &&
+        parseInt(priority) <= 3) {
+        next();
+    }
+    else {
+        console.error('Invalid or missing Priority');
+        response.status(400).send({
+            message: 'Invalid or missing Priority - please refer to documentation',
+        });
+    }
+}
+function mwValidNameMessageBody(request, response, next) {
     if (isStringProvided(request.body.name) &&
         isStringProvided(request.body.message)) {
         next();
     }
     else {
+        console.error('Missing required information');
         response.status(400).send({
-            message: 'Missing required information',
+            message: 'Missing required information - please refer to documentation',
+        });
+    }
+}
+/**
+ * @apiDefine JSONError
+ * @apiError (400: JSON Error) {String} message "malformed JSON in parameters"
+ */
+/**
+ * @api {post} /message Request to add an entry
+ *
+ * @apiDescription Request to add a message and someone's name to the DB
+ *
+ * @apiName PostMessage
+ * @apiGroup Message
+ *
+ * @apiBody {string} name someone's name *unique
+ * @apiBody {string} message a message to store with the name
+ * @apiBody {number} priority a message priority [1-3]
+ *
+ * @apiSuccess (Success 201) {String} entry the string:
+ *      "{<code>priority</code>} - [<code>name</code>] says: <code>message</code>"
+ *
+ * @apiError (400: Name exists) {String} message "Name exists"
+ * @apiError (400: Missing Parameters) {String} message "Missing required information - please refer to documentation"
+ * @apiError (400: Invalid Priority) {String} message "Invalid or missing Priority  - please refer to documentation"
+ * @apiUse JSONError
+ */
+messageRouter.post('/', mwValidNameMessageBody, (request, response, next) => {
+    const priority = request.body.priority;
+    if (utilities_1.validationFunctions.isNumberProvided(priority) &&
+        parseInt(priority) >= 1 &&
+        parseInt(priority) <= 3) {
+        next();
+    }
+    else {
+        console.error('Invalid or missing Priority');
+        response.status(400).send({
+            message: 'Invalid or missing Priority - please refer to documentation',
         });
     }
 }, (request, response) => {
-    const theQuery = 'INSERT INTO DEMO(Name, Message) VALUES ($1, $2) RETURNING *';
-    const values = [request.body.name, request.body.message];
+    //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
+    //If you want to read more: https://stackoverflow.com/a/8265319
+    const theQuery = 'INSERT INTO DEMO(Name, Message, Priority) VALUES ($1, $2, $3) RETURNING *';
+    const values = [
+        request.body.name,
+        request.body.message,
+        request.body.priority,
+    ];
     utilities_1.pool.query(theQuery, values)
         .then((result) => {
         // result.rows array are the records returned from the SQL statement.
         // An INSERT statement will return a single row, the row that was inserted.
         response.status(201).send({
-            success: true,
-            message: `[${result.rows[0].name}] says: ${result.rows[0].message}`,
+            entry: format(result.rows[0]),
         });
     })
         .catch((error) => {
-        // log the error
-        console.log(error);
-        console.dir(error);
-        console.log({
-            user: process.env.PGUSER,
-            database: process.env.PGDATABASE,
-            password: process.env.PGPASSWORD,
-        });
         if (error.detail != undefined &&
             error.detail.endsWith('already exists.')) {
+            console.error('Name exists');
             response.status(400).send({
                 message: 'Name exists',
             });
         }
         else {
-            response.status(400).send({
-                message: error,
+            //log the error
+            console.error('DB Query error on POST');
+            console.error(error);
+            response.status(500).send({
+                message: 'server error - contact support',
             });
         }
     });
 });
 /**
- * @api {get} /demosql/:name Request to get all demo entries in the DB
- * @apiName GetDemoSql
- * @apiGroup DemoSql
+ * @api {get} /message/all Request to all retrieve entries
  *
- * @apiParam {String} [name] the name to look up. If no name provided, all names are returned
+ * @apiDescription Request to retrieve all the entries
  *
- * @apiSuccess {boolean} success true when the name is inserted
- * @apiSuccess {Object[]} names List of names in the Demo DB
- * @apiSuccess {String} names.name The name
- * @apiSuccess {String} names.message The message associated with the name
+ * @apiName GetAllMessages
+ * @apiGroup Message
  *
- * @apiError (404: Name Not Found) {String} message "Name not found"
- *
- * @apiUse JSONError
+ * @apiSuccess {String[]} entries the aggregate of all entries as the following string:
+ *      "{<code>priority</code>} - [<code>name</code>] says: <code>message</code>"
  */
-messageRouter.get('/:name?', (request, response) => {
-    const theQuery = 'SELECT name, message FROM Demo WHERE name LIKE $1';
-    let values = [request.params.name];
-    //No name was sent so SELECT on all
-    if (!isStringProvided(request.params.name)) {
-        values = ['%'];
-    }
+messageRouter.get('/all', (request, response) => {
+    const theQuery = 'SELECT name, message, priority FROM Demo';
+    utilities_1.pool.query(theQuery)
+        .then((result) => {
+        response.send({
+            entries: result.rows.map(format),
+        });
+    })
+        .catch((error) => {
+        //log the error
+        console.error('DB Query error on GET all');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
+        });
+    });
+});
+/**
+ * @api {get} /message Request to retrieve entries by priority
+ *
+ * @apiDescription Request to retrieve all the entries of <code>priority</code>
+ *
+ * @apiName GetAllMessagesPri
+ * @apiGroup Message
+ *
+ * @apiQuery {number} priority the priority in which to retrieve all entries
+ *
+ * @apiSuccess {String[]} entries the aggregate of all entries with <code>priority</code> as the following string:
+ *      "{<code>priority</code>} - [<code>name</code>] says: <code>message</code>"
+ *
+ * @apiError (400: Invalid Priority) {String} message "Invalid or missing Priority  - please refer to documentation"
+ * @apiError (404: No messages) {String} message "No Priority <code>priority</code> messages found"
+ */
+messageRouter.get('/', mwValidPriorityQuery, (request, response) => {
+    const theQuery = 'SELECT name, message, priority FROM Demo where priority = $1';
+    const values = [request.query.priority];
     utilities_1.pool.query(theQuery, values)
         .then((result) => {
         if (result.rowCount > 0) {
             response.send({
-                success: true,
-                names: result.rows,
+                entries: result.rows,
+            });
+        }
+        else {
+            response.status(404).send({
+                message: `No Priority ${request.query.priority} messages found`,
+            });
+        }
+    })
+        .catch((error) => {
+        //log the error
+        console.error('DB Query error on GET by priority');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
+        });
+    });
+});
+/**
+ * @api {get} /message/:name Request to retrieve an entry by name
+ *
+ * @apiDescription Request to retrieve the complete entry for <code>name</code>.
+ * Note this endpoint returns an entry as an object, not a formatted string like the
+ * other endpoints.
+ *
+ * @apiName GetMessageName
+ * @apiGroup Message
+ *
+ * @apiParam {string} name the name to look up.
+ *
+ * @apiSuccess {Object} entry the message entry object for <code>name</code>
+ * @apiSuccess {string} entry.name <code>name</code>
+ * @apiSuccess {string} entry.message The message associated with <code>name</code>
+ * @apiSuccess {number} entry.priority The priority associated with <code>name</code>
+ *
+ * @apiError (404: Name Not Found) {string} message "Name not found"
+ */
+messageRouter.get('/:name', (request, response) => {
+    const theQuery = 'SELECT name, message, priority FROM Demo WHERE name = $1';
+    let values = [request.params.name];
+    utilities_1.pool.query(theQuery, values)
+        .then((result) => {
+        if (result.rowCount == 1) {
+            response.send({
+                entry: result.rows[0],
             });
         }
         else {
@@ -114,112 +214,137 @@ messageRouter.get('/:name?', (request, response) => {
             });
         }
     })
-        .catch((err) => {
+        .catch((error) => {
         //log the error
-        // console.log(err.details)
-        response.status(400).send({
-            message: err.detail,
+        console.error('DB Query error on GET /:name');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
         });
     });
 });
 /**
- * @api {put} /demosql Request to replace the message entry in the DB for name
- * @apiName PutDemoSql
- * @apiGroup DemoSql
+ * @api {put} /message Request to change an entry
+ *
+ * @apiDescription Request to replace the message entry in the DB for name
+ *
+ * @apiName PutMessage
+ * @apiGroup Message
  *
  * @apiBody {String} name the name entry
  * @apiBody {String} message a message to replace with the associated name
  *
- * @apiSuccess {boolean} success true when the name is inserted
- * @apiSuccess {String} message the string "Updated: ***name***" where ***name*** corresponds
- * to the parameter string name.
+ * @apiSuccess {String} entry the string
+ *      "Updated: {<code>priority</code>} - [<code>name</code>] says: <code>message</code>"
  *
  * @apiError (404: Name Not Found) {String} message "Name not found"
- *
- * @apiError (400: Missing Parameters) {String} message "Missing required information"
- *
+ * @apiError (400: Missing Parameters) {String} message "Missing required information" *
  * @apiUse JSONError
  */
-messageRouter.put('/', (request, response) => {
-    if (isStringProvided(request.body.name) &&
-        isStringProvided(request.body.message)) {
-        const theQuery = 'UPDATE Demo SET message = $1 WHERE name = $2 RETURNING *';
-        const values = [request.body.message, request.body.name];
-        utilities_1.pool.query(theQuery, values)
-            .then((result) => {
-            if (result.rowCount > 0) {
-                response.send({
-                    success: true,
-                    message: 'Updated: ' + result.rows[0].name,
-                });
-            }
-            else {
-                response.status(404).send({
-                    message: 'Name not found',
-                });
-            }
-        })
-            .catch((err) => {
-            //log the error
-            // console.log(err)
-            response.status(400).send({
-                message: err.detail,
+messageRouter.put('/', mwValidNameMessageBody, (request, response, next) => {
+    const theQuery = 'UPDATE Demo SET message = $1 WHERE name = $2 RETURNING *';
+    const values = [request.body.message, request.body.name];
+    utilities_1.pool.query(theQuery, values)
+        .then((result) => {
+        if (result.rowCount == 1) {
+            response.send({
+                entry: 'Updated: ' + format(result.rows[0]),
             });
+        }
+        else {
+            response.status(404).send({
+                message: 'Name not found',
+            });
+        }
+    })
+        .catch((error) => {
+        //log the error
+        console.error('DB Query error on PUT');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
         });
-    }
-    else {
-        response.status(400).send({
-            message: 'Missing required information',
-        });
-    }
+    });
 });
 /**
- * @api {delete} /demosql/:name Request to remove entry in the DB for name
- * @apiName DeleteDemoSql
- * @apiGroup DemoSql
+ * @api {delete} /message Request to remove entries by priority
  *
- * @apiParam {String} name the name entry  to delete
+ * @apiDescription Request to remove all entries of <code>priority</code>
  *
- * @apiSuccess {boolean} success true when the name is delete
- * @apiSuccess {String} message the string "Deleted: ***name***" where ***name*** corresponds
- * to the parameter string name.
+ * @apiName DeleteMessagesPri
+ * @apiGroup Message
+ *
+ * @apiQuery {number} priority the priority [1-3] to delete all entries
+ *
+ * @apiSuccess {String[]} entries the aggregate of all deleted entries with <code>priority</code> as the following string:
+ *      "{<code>priority</code>} - [<code>name</code>] says: <code>message</code>"
+ *
+ * @apiError (400: Invalid or missing Priority) {String} message "Invalid or missing Priority - please refer to documentation"
+ * @apiError (404: No messages) {String} message "No Priority <code>priority</code> messages found"
+ */
+messageRouter.delete('/', mwValidPriorityQuery, (request, response) => {
+    const theQuery = 'DELETE FROM Demo  WHERE priority = $1 RETURNING *';
+    const values = [request.query.priority];
+    utilities_1.pool.query(theQuery, values)
+        .then((result) => {
+        if (result.rowCount > 0) {
+            response.send({
+                entries: result.rows.map(format),
+            });
+        }
+        else {
+            response.status(404).send({
+                message: `No Priority ${request.query.priority} messages found`,
+            });
+        }
+    })
+        .catch((error) => {
+        //log the error
+        console.error('DB Query error on DELETE by priority');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
+        });
+    });
+});
+/**
+ * @api {delete} /message/:name Request to remove an entry by name
+ *
+ * @apiDescription Request to remove an entry associated with <code>name</code> in the DB
+ *
+ * @apiName DeleteMessage
+ * @apiGroup Message
+ *
+ * @apiParam {String} name the name associated with the entry to delete
+ *
+ * @apiSuccess {String} entry the string
+ *      "Deleted: {<code>priority</code>} - [<code>name</code>] says: <code>message</code>"
  *
  * @apiError (404: Name Not Found) {String} message "Name not found"
- *
- * @apiError (400: Missing Parameters) {String} message "Missing required information"
- *
- * @apiUse JSONError
  */
 messageRouter.delete('/:name', (request, response) => {
-    if (isStringProvided(request.params.name)) {
-        const theQuery = 'DELETE FROM Demo  WHERE name = $1 RETURNING *';
-        const values = [request.params.name];
-        utilities_1.pool.query(theQuery, values)
-            .then((result) => {
-            if (result.rowCount == 1) {
-                response.send({
-                    success: true,
-                    message: 'Deleted: ' + result.rows[0].name,
-                });
-            }
-            else {
-                response.status(404).send({
-                    message: 'Name not found',
-                });
-            }
-        })
-            .catch((err) => {
-            //log the error
-            // console.log(err)
-            response.status(400).send({
-                message: err.detail,
+    const theQuery = 'DELETE FROM Demo  WHERE name = $1 RETURNING *';
+    const values = [request.params.name];
+    utilities_1.pool.query(theQuery, values)
+        .then((result) => {
+        if (result.rowCount == 1) {
+            response.send({
+                entry: 'Deleted: ' + format(result.rows[0]),
             });
+        }
+        else {
+            response.status(404).send({
+                message: 'Name not found',
+            });
+        }
+    })
+        .catch((error) => {
+        //log the error
+        console.error('DB Query error on DELETE /:name');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
         });
-    }
-    else {
-        response.status(400).send({
-            message: 'Missing required information',
-        });
-    }
+    });
 });
 //# sourceMappingURL=message.js.map

@@ -7,8 +7,6 @@ exports.signinRouter = void 0;
 // express is the framework we're going to use to handle requests
 const express_1 = __importDefault(require("express"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// import dotenv from 'dotenv';
-// dotenv.config();
 const utilities_1 = require("../../core/utilities");
 const isStringProvided = utilities_1.validationFunctions.isStringProvided;
 const generateHash = utilities_1.credentialingFunctions.generateHash;
@@ -18,35 +16,23 @@ const key = {
     secret: process.env.JSON_WEB_TOKEN,
 };
 /**
- * @api {get} /auth Request to sign a user in the system
- * @apiName GetAuth
+ * @api {post} /login Request to sign a user in the system
+ * @apiName PostLogin
  * @apiGroup Auth
  *
- * @apiHeader {String} authorization "username:password" uses Basic Auth
+ * @apiBody {String} email a users email
+ * @apiBody {String} password a users password
  *
- * @apiSuccess {boolean} success true when the name is found and password matches
- * @apiSuccess {String} message "Authentication successful!"
- * @apiSuccess {String} token JSON Web Token
+ * @apiSuccess {String} accessToken JSON Web Token
+ * @apiSuccess {number} id unique user id
  *
- *  * @apiSuccessExample {json} Success-Response:
- *     HTTP/1.1 200 OK
- *     {
- *       "success": true,
- *       "message": "Authentication successful!",
- *       "token": "eyJhbGciO...abc123"
- *     }
- *
- * @apiError (400: Missing Authorization Header) {String} message "Missing Authorization Header"
- *
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
  * @apiError (400: Malformed Authorization Header) {String} message "Malformed Authorization Header"
- *
  * @apiError (404: User Not Found) {String} message "User not found"
- *
  * @apiError (400: Invalid Credentials) {String} message "Credentials did not match"
  *
  */
 signinRouter.post('/login', (request, response, next) => {
-    // obtain auth credentials from HTTP Header
     if (isStringProvided(request.body.email) &&
         isStringProvided(request.body.password)) {
         next();
@@ -57,7 +43,7 @@ signinRouter.post('/login', (request, response, next) => {
         });
     }
 }, (request, response) => {
-    const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role, account.create_date FROM Account_Credential
+    const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role FROM Account_Credential
                       INNER JOIN Account ON
                       Account_Credential.account_id=Account.account_id 
                       WHERE Account.email=$1`;
@@ -67,6 +53,14 @@ signinRouter.post('/login', (request, response, next) => {
         if (result.rowCount == 0) {
             response.status(404).send({
                 message: 'User not found',
+            });
+            return;
+        }
+        else if (result.rowCount > 1) {
+            //log the error
+            console.error('DB Query error on sign in: too many results returned');
+            response.status(500).send({
+                message: 'server error - contact support',
             });
             return;
         }
@@ -80,6 +74,7 @@ signinRouter.post('/login', (request, response, next) => {
         if (storedSaltedHash === providedSaltedHash) {
             //credentials match. get a new JWT
             const accessToken = jsonwebtoken_1.default.sign({
+                name: result.rows[0].firstname,
                 role: result.rows[0].account_role,
                 id: result.rows[0].account_id,
             }, key.secret, {
@@ -88,15 +83,7 @@ signinRouter.post('/login', (request, response, next) => {
             //package and send the results
             response.json({
                 accessToken,
-                user: {
-                    firstname: result.rows[0].firstname,
-                    lastname: result.rows[0].lastname,
-                    username: result.rows[0].username,
-                    email: result.rows[0].email,
-                    phone: result.rows[0].phone,
-                    id: result.rows[0].account_id,
-                    createDt: result.rows[0].create_date,
-                },
+                id: result.rows[0].account_id,
             });
         }
         else {
@@ -106,11 +93,12 @@ signinRouter.post('/login', (request, response, next) => {
             });
         }
     })
-        .catch((err) => {
+        .catch((error) => {
         //log the error
-        console.log(err);
-        response.status(400).send({
-            message: err.detail,
+        console.error('DB Query error on sign in');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
         });
     });
 });

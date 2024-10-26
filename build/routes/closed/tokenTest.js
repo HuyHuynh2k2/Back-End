@@ -10,11 +10,17 @@ const express_1 = __importDefault(require("express"));
 const tokenTestRouter = express_1.default.Router();
 exports.tokenTestRouter = tokenTestRouter;
 /**
- * @api {get} /hello Request a Hello World message
- * @apiName GetHello
- * @apiGroup Hello
+ * @api {get} /jwt_test Test token authenticator
+ * @apiName JWT Test
+ * @apiGroup JWT Test
  *
- * @apiSuccess {String} message the String: "Hello, you sent a GET request"
+ * @apiSuccess {String} message  the string
+ *  "Your token is valid and your role is: <code>role</code>"
+ *
+ * @apiError (403: Token is not valid) {String} message "Token is not valid" when the provided Auth token is
+ * invalid for any reason.
+ * @apiError (401: Auth token is not supplied) {String} message "Auth token is not supplied" when no Auth token
+ * is provided
  */
 tokenTestRouter.get('/', (request, response) => {
     response.send({
