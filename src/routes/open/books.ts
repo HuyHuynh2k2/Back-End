@@ -123,6 +123,67 @@ bookRouter.get(
             });
     }
 );
+
+// Extra routing method
+bookRouter.get(
+    '/average_rating/:average_rating',
+    (request: Request, response: Response) => {
+        const tolerance = 0.005; // A small tolerance for floating point comparison (0.005 for hundredths precision)
+        const averageRating = parseFloat(request.params.average_rating);
+
+        const theQuery = 'SELECT * FROM BOOKS WHERE average_rating BETWEEN $1 - $2 AND $1 + $2';
+        const values = [averageRating, tolerance];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    response.send({
+                        books: result.rows,
+                    });
+                } else {
+                    response.status(404).send({
+                        message: 'No books found with given average rating',
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('DB query error on GET books by average rating');
+                console.error(error);
+                response.status(500).send({
+                    message: 'Server error - contact support HIEU DOAN',
+                });
+            });
+    }
+);
+
+bookRouter.get(
+    '/publication_year/:publication_year',
+    (request: Request, response: Response) => {
+        const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
+        const values = [request.params.publication_year];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    response.send({
+                        books: result.rows,
+                    });
+                } else {
+                    response.status(404).send({
+                        message: 'No books found with given publication year',
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('DB query error on GET books by publication year');
+                console.error(error);
+                response.status(500).send({
+                    message: 'Server error - contact support HIEU DOAN',
+                });
+            });
+    }
+);
+
 bookRouter.get(
     '/all',
     mwValidPaginationQuery,
