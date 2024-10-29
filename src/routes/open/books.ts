@@ -130,9 +130,11 @@ bookRouter.get(
     (request: Request, response: Response) => {
         const tolerance = 0.005; // A small tolerance for floating point comparison (0.005 for hundredths precision)
         const averageRating = parseFloat(request.params.average_rating);
+        const min = averageRating - tolerance
+        const max = averageRating + tolerance
 
-        const theQuery = 'SELECT * FROM BOOKS WHERE average_rating BETWEEN $1 - $2 AND $1 + $2';
-        const values = [averageRating, tolerance];
+        const theQuery = 'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
+        const values = [min, max];
 
         pool.query(theQuery, values)
             .then((result) => {
