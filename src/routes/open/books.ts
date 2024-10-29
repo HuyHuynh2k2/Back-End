@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
+import { IRatings } from '../../core/models';
 
 const bookRouter: Router = express.Router();
 
