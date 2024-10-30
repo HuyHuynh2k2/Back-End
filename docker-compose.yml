@@ -18,17 +18,15 @@ services:
             - '4000:4000'
         command: npm run dev
 
-    db:
-        image: postgres:latest
+    mongo:
+        image: mongo:latest
         ports:
-            - 5432:5432
+            - 27017:27017
         restart: always
         environment:
-            POSTGRES_PASSWORD: ads123
-            POSTGRES_USER: tcss460
-            POSTGRES_DB: tcss460
-        container_name: lecture-db
+            MONGO_INITDB_ROOT_USERNAME: tcss460
+            MONGO_INITDB_ROOT_PASSWORD: tcss460
+            MONGO_INITDB_DATABASE: tcss460
+        container_name: lecture-mongo
         volumes:
-            - ~/apps/postgres:/var/lib/postgresql/data
-            - ./data/books.csv:/docker-entrypoint-initdb.d/books.csv
-            - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ~/apps/mongo:/data
