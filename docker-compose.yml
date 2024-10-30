@@ -26,7 +26,7 @@ services:
         environment:
             MONGO_INITDB_ROOT_USERNAME: tcss460
             MONGO_INITDB_ROOT_PASSWORD: tcss460
-            MONGO_INITDB_DATABASE: tcss4601234
+            MONGO_INITDB_DATABASE: tcss46012
         container_name: lecture-mongo
         volumes:
             - ~/apps/mongo:/data
