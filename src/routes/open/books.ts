@@ -3,11 +3,12 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
-import { IRatings } from '../../core/models';
+import { Book, UrlIcon, Ratings } from './implentation';
 
 const bookRouter: Router = express.Router();
 
-const isStringProvided = validationFunctions.isNumberProvided;
+const isStringProvided = validationFunctions.isStringProvided;
+const isNumberProvided = validationFunctions.isNumberProvided;
 
 function mwValidPaginationQuery(
     request: Request,
@@ -17,10 +18,7 @@ function mwValidPaginationQuery(
     const page: string = request.query.page as string;
     const limit: string = request.query.limit as string;
 
-    if (
-        validationFunctions.isNumberProvided(page) &&
-        validationFunctions.isNumberProvided(limit)
-    ) {
+    if (isNumberProvided(page) && isNumberProvided(limit)) {
         next();
     } else {
         response.status(400).send({
@@ -34,7 +32,7 @@ function mwValidPaginationQuery(
 // Middleware to validate the ISBN parameter
 function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     const isbn: string = request.query.isbn as string; // Cast to string for validation
-    if (validationFunctions.isNumberProvided(isbn) && isbn.length === 13) {
+    if (isNumberProvided(isbn) && isbn.length === 13) {
         next();
     } else {
         response.status(400).send({
@@ -42,6 +40,20 @@ function mwValidISBN(request: Request, response: Response, next: NextFunction) {
                 'Invalid or missing ISBN parameter - please provide a 13-digit number',
         });
     }
+}
+
+function mwValidAuthor(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const author: string = request.body.author;
+    if (!isStringProvided(author)) {
+        response.status(400).send({
+            message: 'Invalid Author',
+        });
+    }
+    next();
 }
 
 bookRouter.get('/', mwValidISBN, (request: Request, response: Response) => {
@@ -131,10 +143,11 @@ bookRouter.get(
     (request: Request, response: Response) => {
         const tolerance = 0.005; // A small tolerance for floating point comparison (0.005 for hundredths precision)
         const averageRating = parseFloat(request.params.average_rating);
-        const min = averageRating - tolerance
-        const max = averageRating + tolerance
+        const min = averageRating - tolerance;
+        const max = averageRating + tolerance;
 
-        const theQuery = 'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
+        const theQuery =
+            'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
         const values = [min, max];
 
         pool.query(theQuery, values)
@@ -178,7 +191,9 @@ bookRouter.get(
                 }
             })
             .catch((error) => {
-                console.error('DB query error on GET books by publication year');
+                console.error(
+                    'DB query error on GET books by publication year'
+                );
                 console.error(error);
                 response.status(500).send({
                     message: 'Server error - contact support HIEU DOAN',
