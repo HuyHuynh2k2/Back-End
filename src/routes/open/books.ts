@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
+import { Book, Ratings, UrlIcon } from './implements';
 
 const bookRouter: Router = express.Router();
 
@@ -50,9 +51,31 @@ bookRouter.get('/', mwValidISBN, (request: Request, response: Response) => {
     pool.query(theQuery, values)
         .then((result) => {
             if (result.rowCount === 1) {
-                response.send({
-                    book: result.rows[0],
-                });
+                const row = result.rows[0];
+
+                const ratings = new Ratings(
+                    row.rating_avg,
+                    row.rating_count,
+                    row.rating_1_star,
+                    row.rating_2_star,
+                    row.rating_3_star,
+                    row.rating_4_star,
+                    row.rating_5_star
+                );
+
+                const icons = new UrlIcon(row.image_url, row.image_small_url);
+
+                const book = new Book(
+                    row.isbn13,
+                    row.authors,
+                    row.publication,
+                    row.original_title,
+                    row.title,
+                    ratings,
+                    icons
+                );
+
+                response.send({ book });
             } else {
                 response.status(404).send({
                     message: 'Book not found',
