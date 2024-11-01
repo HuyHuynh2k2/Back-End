@@ -1,5 +1,12 @@
 // express is framework we're using to use to handle requests
-import express, { NextFunction, Request, Response, Router } from 'express';
+import express, {
+    NextFunction,
+    query,
+    Request,
+    response,
+    Response,
+    Router,
+} from 'express';
 
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
@@ -157,6 +164,76 @@ bookRouter.get(
             });
     }
 );
+
+bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
+    const tolerance = 0.005;
+    const averageRating = parseFloat(request.params.rating);
+    const min = averageRating - tolerance;
+    const max = averageRating + tolerance;
+
+    const theQuery = 'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
+    const values = [min, max];
+
+    pool.query(theQuery, values)
+        .then((result) => {
+            if (result.rowCount > 0) {
+                const rows = result.rows;
+                const finalResult: Book[] = [];
+                for (const row of rows) {
+                    const book: Book = createBook(row);
+                    finalResult.push(book);
+                }
+                response.send({
+                    book: finalResult,
+                });
+            } else {
+                response.send('No Books found with given rating');
+            }
+        })
+        .catch((error) => {
+            console.error('BD query error on GET books by ratings');
+            console.log(error);
+            response.status(500).send({
+                message: 'Server error - contact support team',
+            });
+        });
+});
+
+bookRouter.get(
+    '/publication/:publicationYear',
+    (request: Request, response: Response) => {
+        const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
+        const values = [request.params.publicationYear];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    const rows = result.rows;
+                    const finalResult: Book[] = [];
+
+                    for (const row of rows) {
+                        const book: Book = createBook(row);
+                        finalResult.push(book);
+                    }
+                    response.send({
+                        book: finalResult,
+                    });
+                } else {
+                    response.send({
+                        message: 'No books found with given publication',
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('BD query error on GET books by publication');
+                console.log(error);
+                response.status(500).send({
+                    message: 'Server error - contact support team',
+                });
+            });
+    }
+);
+
 bookRouter.get(
     '/all',
     mwValidPaginationQuery,
