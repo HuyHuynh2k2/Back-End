@@ -4,8 +4,6 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
 import { Book, Ratings, UrlIcon } from './implements';
-import { create } from 'domain';
-import { request } from 'http';
 
 const bookRouter: Router = express.Router();
 
@@ -100,8 +98,14 @@ bookRouter.get(
         pool.query(theQuery, values)
             .then((result) => {
                 if (result.rowCount > 0) {
+                    const rows = result.rows;
+                    const finalResult: Book[] = [];
+                    for (var row of rows) {
+                        const book: Book = createBook(row);
+                        finalResult.push(book);
+                    }
                     response.send({
-                        books: result.rows,
+                        books: finalResult,
                     });
                 } else {
                     response.status(404).send({
@@ -128,8 +132,14 @@ bookRouter.get(
         pool.query(theQuery, values)
             .then((result) => {
                 if (result.rowCount > 0) {
+                    const rows = result.rows;
+                    const finalResult: Book[] = [];
+                    for (var row of rows) {
+                        const book: Book = createBook(row);
+                        finalResult.push(book);
+                    }
                     response.send({
-                        books: result.rows,
+                        books: finalResult,
                     });
                 } else {
                     response.status(404).send({
@@ -159,8 +169,14 @@ bookRouter.get(
 
         pool.query(theQuery, values)
             .then((result) => {
+                const rows = result.rows;
+                const finalResult: Book[] = [];
+                for (var row of rows) {
+                    const book: Book = createBook(row);
+                    finalResult.push(book);
+                }
                 response.send({
-                    books: result.rows,
+                    books: finalResult,
                 });
             })
             .catch((error) => {
@@ -247,7 +263,6 @@ bookRouter.delete(
 
         pool.query(query, value)
             .then((result) => {
-                
                 if (result.rowCount > 0) {
                     const book: Book = createBook(result.rows[0]);
                     response.send({
