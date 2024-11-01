@@ -4,10 +4,13 @@ import express, { NextFunction, Request, Response, Router } from 'express';
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
 import { Book, Ratings, UrlIcon } from './implements';
+import { create } from 'domain';
+import { request } from 'http';
 
 const bookRouter: Router = express.Router();
 
-const isStringProvided = validationFunctions.isNumberProvided;
+const isStringProvided = validationFunctions.isStringProvided;
+const isNumberProvided = validationFunctions.isNumberProvided;
 
 function mwValidPaginationQuery(
     request: Request,
@@ -17,10 +20,7 @@ function mwValidPaginationQuery(
     const page: string = request.query.page as string;
     const limit: string = request.query.limit as string;
 
-    if (
-        validationFunctions.isNumberProvided(page) &&
-        validationFunctions.isNumberProvided(limit)
-    ) {
+    if (isNumberProvided(page) && isNumberProvided(limit)) {
         next();
     } else {
         response.status(400).send({
@@ -34,7 +34,7 @@ function mwValidPaginationQuery(
 // Middleware to validate the ISBN parameter
 function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     const isbn: string = request.query.isbn as string; // Cast to string for validation
-    if (validationFunctions.isNumberProvided(isbn) && isbn.length === 13) {
+    if (isNumberProvided(isbn) && isbn.length === 13) {
         next();
     } else {
         response.status(400).send({
@@ -44,55 +44,55 @@ function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     }
 }
 
-bookRouter.get('/', mwValidISBN, (request: Request, response: Response) => {
-    const theQuery = 'SELECT * FROM BOOKS WHERE isbn13 = $1';
-    const values = [request.query.isbn];
+function mwValidAuthor(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const author: string = request.query.author as string;
 
-    pool.query(theQuery, values)
-        .then((result) => {
-            if (result.rowCount === 1) {
-                const row = result.rows[0];
-
-                const ratings = new Ratings(
-                    row.rating_avg,
-                    row.rating_count,
-                    row.rating_1_star,
-                    row.rating_2_star,
-                    row.rating_3_star,
-                    row.rating_4_star,
-                    row.rating_5_star
-                );
-
-                const icons = new UrlIcon(row.image_url, row.image_small_url);
-
-                const book = new Book(
-                    row.isbn13,
-                    row.authors,
-                    row.publication,
-                    row.original_title,
-                    row.title,
-                    ratings,
-                    icons
-                );
-
-                response.send({ book });
-            } else {
-                response.status(404).send({
-                    message: 'Book not found',
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('DB Query error on GET book by ISBN');
-            console.error(error);
-            response.status(500).send({
-                message: 'Server error - contact support HUY HUYNH',
-            });
+    if (!isStringProvided(author)) {
+        response.status(400).send({
+            message: 'Invalid Author',
         });
-});
+    }
+
+    next();
+}
+
+bookRouter.get(
+    '/isbn/:isbn',
+    mwValidISBN,
+    (request: Request, response: Response) => {
+        const theQuery = 'SELECT * FROM BOOKS WHERE isbn13 = $1';
+        const values = [request.query.isbn];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount === 1) {
+                    const row = result.rows[0];
+                    const book: Book = createBook(row);
+
+                    response.send({ book });
+                } else {
+                    response.status(404).send({
+                        message: 'Book not found',
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('DB Query error on GET book by ISBN');
+                console.error(error);
+                response.status(500).send({
+                    message: 'Server error - contact support HUY HUYNH',
+                });
+            });
+    }
+);
 
 bookRouter.get(
     '/author/:author',
+    mwValidAuthor,
     (request: Request, response: Response, next: NextFunction) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE authors = $1';
         const values = [request.params.author]; // Accessing the author from request.params
@@ -174,5 +174,125 @@ bookRouter.get(
             });
     }
 );
+
+bookRouter.post('/book', (request: Request, response: Response) => {
+    const isbn13: string = request.body.isbn13;
+    const authors: string = request.body.string;
+    const publication_year: string = request.body.publication_year;
+    const original_title: string = request.body.original_title;
+    const title: string = request.body.title;
+    const rating_avg: string = request.body.rating_avg;
+    const rating_count: string = request.body.rating_count;
+    const rating_1_star: string = request.body.rating_1_star;
+    const rating_2_star: string = request.body.rating_2_star;
+    const rating_3_star: string = request.body.rating_3_star;
+    const rating_4_star: string = request.body.rating_4_star;
+    const rating_5_star: string = request.body.rating_5_star;
+    const image_url: string = request.body.image_url;
+    const image_small_url: string = request.body.image_small_url;
+
+    const values = [
+        isbn13,
+        authors,
+        publication_year,
+        original_title,
+        title,
+        rating_avg,
+        rating_count,
+        rating_1_star,
+        rating_2_star,
+        rating_3_star,
+        rating_4_star,
+        rating_5_star,
+        image_url,
+        image_small_url,
+    ];
+    const query =
+        'INSERT INTO BOOKS(isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14 RETURNING *';
+
+    pool.query(query, values)
+        .then((result) => {
+            const book: Book = createBook(result.rows[0]);
+            response.status(201).send({
+                entry: book,
+            });
+        })
+        .catch((error) => {
+            if (
+                error.detail != undefined &&
+                (error.detail as string).endsWith('already exists.')
+            ) {
+                console.error('Book exists');
+                response.status(400).send({
+                    message: 'Book exists',
+                });
+            } else {
+                //log the error
+                console.error('DB Query error on POST');
+                console.error(error);
+                response.status(500).send({
+                    message: 'server error - contact support',
+                });
+            }
+        });
+});
+
+bookRouter.delete(
+    '/isbn/:isbn',
+    mwValidISBN,
+    (request: Request, response: Response) => {
+        const isbn: string = request.params.isbn;
+        const value = [isbn];
+        const query = 'DELETE FROM BOOKS WHERE isbn13 = 1$ RETURNING *';
+
+        pool.query(query, value)
+            .then((result) => {
+                
+                if (result.rowCount > 0) {
+                    const book: Book = createBook(result.rows[0]);
+                    response.send({
+                        entries: book,
+                    });
+                } else {
+                    response.status(404).send({
+                        message: `No Book with ${isbn} found`,
+                    });
+                }
+            })
+            .catch((error) => {
+                //log the error
+                console.error('DB Query error on DELETE by isbn');
+                console.error(error);
+                response.status(500).send({
+                    message: 'server error - contact support',
+                });
+            });
+    }
+);
+
+function createBook(row: any): Book {
+    const ratings = new Ratings(
+        row.rating_avg,
+        row.rating_count,
+        row.rating_1_star,
+        row.rating_2_star,
+        row.rating_3_star,
+        row.rating_4_star,
+        row.rating_5_star
+    );
+
+    const icons = new UrlIcon(row.image_url, row.image_small_url);
+
+    const book = new Book(
+        row.isbn13,
+        row.authors,
+        row.publication,
+        row.original_title,
+        row.title,
+        ratings,
+        icons
+    );
+    return book;
+}
 
 export { bookRouter };
