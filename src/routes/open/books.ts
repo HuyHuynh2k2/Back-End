@@ -31,7 +31,8 @@ function mwValidPaginationQuery(
 
 // Middleware to validate the ISBN parameter
 function mwValidISBN(request: Request, response: Response, next: NextFunction) {
-    const isbn: string = request.query.isbn as string; // Cast to string for validation
+    const isbn: string = request.params.isbn as string; // Cast to string for validation
+    // console.log(isbn);
     if (isNumberProvided(isbn) && isbn.length === 13) {
         next();
     } else {
@@ -63,7 +64,7 @@ bookRouter.get(
     mwValidISBN,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE isbn13 = $1';
-        const values = [request.query.isbn];
+        const values = [request.params.isbn];
 
         pool.query(theQuery, values)
             .then((result) => {
@@ -91,7 +92,7 @@ bookRouter.get(
 bookRouter.get(
     '/author/:author',
     mwValidAuthor,
-    (request: Request, response: Response, next: NextFunction) => {
+    (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE authors = $1';
         const values = [request.params.author]; // Accessing the author from request.params
 
@@ -100,7 +101,7 @@ bookRouter.get(
                 if (result.rowCount > 0) {
                     const rows = result.rows;
                     const finalResult: Book[] = [];
-                    for (var row of rows) {
+                    for (const row of rows) {
                         const book: Book = createBook(row);
                         finalResult.push(book);
                     }
@@ -134,7 +135,7 @@ bookRouter.get(
                 if (result.rowCount > 0) {
                     const rows = result.rows;
                     const finalResult: Book[] = [];
-                    for (var row of rows) {
+                    for (const row of rows) {
                         const book: Book = createBook(row);
                         finalResult.push(book);
                     }
@@ -171,7 +172,7 @@ bookRouter.get(
             .then((result) => {
                 const rows = result.rows;
                 const finalResult: Book[] = [];
-                for (var row of rows) {
+                for (const row of rows) {
                     const book: Book = createBook(row);
                     finalResult.push(book);
                 }
