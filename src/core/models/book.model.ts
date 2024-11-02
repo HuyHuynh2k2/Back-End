@@ -1,5 +1,5 @@
-import { IRatings } from './rating.model';
-import { IUrlIcon } from './urlicon.model';
+import { IRatings } from './rating.module';
+import { IUrlIcon } from './urlicon.module';
 
 export interface IBook {
     isbn13: number;

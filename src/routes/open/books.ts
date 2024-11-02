@@ -415,20 +415,6 @@ bookRouter.get(
  * @apiName AddBook
  * @apiGroup Book
  *
- * @apiParam {String} isbn13 The ISBN of the book.
- * @apiParam {String} authors The authors of the book.
- * @apiParam {Number} publication_year The year the book was published.
- * @apiParam {String} original_title The original title of the book.
- * @apiParam {String} title The title of the book.
- * @apiParam {Number} rating_avg The average rating of the book.
- * @apiParam {Number} rating_count The number of ratings.
- * @apiParam {Number} rating_1_star The count of 1-star ratings.
- * @apiParam {Number} rating_2_star The count of 2-star ratings.
- * @apiParam {Number} rating_3_star The count of 3-star ratings.
- * @apiParam {Number} rating_4_star The count of 4-star ratings.
- * @apiParam {Number} rating_5_star The count of 5-star ratings.
- * @apiParam {String} image_url The URL of the book's image.
- * @apiParam {String} image_small_url The URL of the book's small image.
  *
  * @apiSuccess {Object} entry The book object that was added.
  *
