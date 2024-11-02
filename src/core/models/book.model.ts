@@ -1,4 +1,4 @@
-import { IRatings } from './ratings.model';
+import { IRatings } from './rating.model';
 import { IUrlIcon } from './urlicon.model';
 
 export interface IBook {
@@ -9,8 +9,4 @@ export interface IBook {
     title: string;
     ratings: IRatings;
     icons: IUrlIcon;
-
-    constructor(isbn13: number, authors: string, publication: number, original_title: string, title: string, ratings: IRatings, icons: IUrlIcon): {
-      isbn13: number
-    }
 }

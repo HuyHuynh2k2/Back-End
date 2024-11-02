@@ -1,4 +1,4 @@
 export interface IUrlIcon {
-  large: string
-  small: string
+    large: string;
+    small: string;
 }
