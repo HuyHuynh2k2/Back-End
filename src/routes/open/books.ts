@@ -12,11 +12,17 @@ import express, {
 import { pool, validationFunctions } from '../../core/utilities';
 import { Book, Ratings, UrlIcon } from './implements';
 
+// Create a new router instance for book-related routes
 const bookRouter: Router = express.Router();
 
+// Shortcuts for validation functions
 const isStringProvided = validationFunctions.isStringProvided;
 const isNumberProvided = validationFunctions.isNumberProvided;
 
+/**
+ * Middleware to validate pagination query parameters.
+ * Checks if 'page' and 'limit' are provided and valid numbers.
+ */
 function mwValidPaginationQuery(
     request: Request,
     response: Response,
@@ -36,6 +42,10 @@ function mwValidPaginationQuery(
     }
 }
 
+/**
+ * Middleware to validate ID range query parameters.
+ * Checks if 'startId' and 'endId' are valid numbers and if 'startId' is less than or equal to 'endId'.
+ */
 function mwValidIdQuery(
     request: Request,
     response: Response,
@@ -57,7 +67,10 @@ function mwValidIdQuery(
     }
 }
 
-// Middleware to validate the ISBN parameter
+/**
+ * Middleware to validate the ISBN parameter.
+ * Checks if the provided ISBN is a 13-digit number.
+ */
 function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     const isbn: string = request.params.isbn as string; // Cast to string for validation
     // console.log(isbn);
@@ -71,6 +84,10 @@ function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     }
 }
 
+/**
+ * Middleware to validate the author query parameter.
+ * Checks if the provided author is a valid string.
+ */
 function mwValidAuthor(
     request: Request,
     response: Response,
@@ -87,6 +104,29 @@ function mwValidAuthor(
     next();
 }
 
+/**
+ * @api {get} /isbn/:isbn Request to retrieve a book by ISBN
+ *
+ * @apiDescription Retrieves a book entry based on the provided ISBN number.
+ *
+ * @apiName GetBookByISBN
+ * @apiGroup Book
+ *
+ * @apiParam {String} isbn The ISBN of the book to retrieve (13-digit number).
+ *
+ * @apiSuccess {Object} book The book object containing all details of the book.
+ * @apiSuccess {String} book.isbn13 The ISBN of the book.
+ * @apiSuccess {String} book.authors The authors of the book.
+ * @apiSuccess {Number} book.publication_year The year the book was published.
+ * @apiSuccess {String} book.original_title The original title of the book.
+ * @apiSuccess {String} book.title The title of the book.
+ * @apiSuccess {Object} book.ratings Ratings of the book.
+ * @apiSuccess {Object} book.icons URL icons for the book images.
+ *
+ * @apiError (400: Invalid ISBN) {String} message "Invalid or missing ISBN parameter - please provide a 13-digit number."
+ * @apiError (404: Book not found) {String} message "Book not found."
+ * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+ */
 bookRouter.get(
     '/isbn/:isbn',
     mwValidISBN,
@@ -117,6 +157,22 @@ bookRouter.get(
     }
 );
 
+/**
+ * @api {get} /author/:author Request to retrieve books by author
+ *
+ * @apiDescription Retrieves all book entries for a specified author.
+ *
+ * @apiName GetBooksByAuthor
+ * @apiGroup Book
+ *
+ * @apiParam {String} author The author to retrieve books for.
+ *
+ * @apiSuccess {Object[]} books Array of book objects by the specified author.
+ *
+ * @apiError (400: Invalid Author) {String} message "Invalid Author."
+ * @apiError (404: No books found) {String} message "No books found for this author."
+ * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+ */
 bookRouter.get(
     '/author/:author',
     mwValidAuthor,
@@ -152,6 +208,21 @@ bookRouter.get(
     }
 );
 
+/**
+ * @api {get} /original_title/:original_title Request to retrieve books by original title
+ *
+ * @apiDescription Retrieves all book entries with the specified original title.
+ *
+ * @apiName GetBooksByOriginalTitle
+ * @apiGroup Book
+ *
+ * @apiParam {String} original_title The original title to search for.
+ *
+ * @apiSuccess {Object[]} books Array of book objects with the specified original title.
+ *
+ * @apiError (404: No books found) {String} message "No books found with given original title."
+ * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+ */
 bookRouter.get(
     '/original_title/:original_title',
     (request: Request, response: Response) => {
@@ -186,6 +257,21 @@ bookRouter.get(
     }
 );
 
+/**
+ * @api {get} /ratings/:rating Request to retrieve books by average rating
+ *
+ * @apiDescription Retrieves all book entries with an average rating within a certain tolerance.
+ *
+ * @apiName GetBooksByRating
+ * @apiGroup Book
+ *
+ * @apiParam {Number} rating The average rating to search for.
+ *
+ * @apiSuccess {Object[]} books Array of book objects with the specified average rating.
+ *
+ * @apiError (404: No books found) {String} message "No Books found with given rating."
+ * @apiError (500: Server error) {String} message "Server error - contact support team."
+ */
 bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
     const tolerance = 0.005;
     const averageRating = parseFloat(request.params.rating);
@@ -220,6 +306,21 @@ bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
         });
 });
 
+/**
+ * @api {get} /publication/:publicationYear Request to retrieve books by publication year
+ *
+ * @apiDescription Retrieves all book entries published in the specified year.
+ *
+ * @apiName GetBooksByPublicationYear
+ * @apiGroup Book
+ *
+ * @apiParam {Number} publicationYear The publication year to search for.
+ *
+ * @apiSuccess {Object[]} books Array of book objects published in the specified year.
+ *
+ * @apiError (404: No books found) {String} message "No books found with given publication."
+ * @apiError (500: Server error) {String} message "Server error - contact support team."
+ */
 bookRouter.get(
     '/publication/:publicationYear',
     (request: Request, response: Response) => {
@@ -255,6 +356,22 @@ bookRouter.get(
     }
 );
 
+/**
+ * @api {get} /all Request to retrieve all books with pagination
+ *
+ * @apiDescription Retrieves all book entries with optional pagination.
+ *
+ * @apiName GetAllBooks
+ * @apiGroup Book
+ *
+ * @apiQuery {Number} page The page number to retrieve.
+ * @apiQuery {Number} limit The number of entries per page.
+ *
+ * @apiSuccess {Object[]} books Array of book objects for the specified page.
+ *
+ * @apiError (400: Invalid Pagination) {String} message "Invalid or missing pagination parameters - please refer to documentation."
+ * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+ */
 bookRouter.get(
     '/all',
     mwValidPaginationQuery,
@@ -290,6 +407,34 @@ bookRouter.get(
     }
 );
 
+/**
+ * @api {post} /book Request to add a new book
+ *
+ * @apiDescription Adds a new book entry to the database.
+ *
+ * @apiName AddBook
+ * @apiGroup Book
+ *
+ * @apiParam {String} isbn13 The ISBN of the book.
+ * @apiParam {String} authors The authors of the book.
+ * @apiParam {Number} publication_year The year the book was published.
+ * @apiParam {String} original_title The original title of the book.
+ * @apiParam {String} title The title of the book.
+ * @apiParam {Number} rating_avg The average rating of the book.
+ * @apiParam {Number} rating_count The number of ratings.
+ * @apiParam {Number} rating_1_star The count of 1-star ratings.
+ * @apiParam {Number} rating_2_star The count of 2-star ratings.
+ * @apiParam {Number} rating_3_star The count of 3-star ratings.
+ * @apiParam {Number} rating_4_star The count of 4-star ratings.
+ * @apiParam {Number} rating_5_star The count of 5-star ratings.
+ * @apiParam {String} image_url The URL of the book's image.
+ * @apiParam {String} image_small_url The URL of the book's small image.
+ *
+ * @apiSuccess {Object} entry The book object that was added.
+ *
+ * @apiError (400: Book exists) {String} message "Book exists."
+ * @apiError (500: Server error) {String} message "Server error - contact support."
+ */
 bookRouter.post('/book', async (request: Request, response: Response) => {
     const {
         isbn13,
@@ -359,6 +504,22 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
         });
 });
 
+/**
+ * @api {delete} /isbn/:isbn Request to delete a book by ISBN
+ *
+ * @apiDescription Deletes a book entry based on the provided ISBN number.
+ *
+ * @apiName DeleteBookByISBN
+ * @apiGroup Book
+ *
+ * @apiParam {String} isbn The ISBN of the book to delete (13-digit number).
+ *
+ * @apiSuccess {Object} entries The deleted book object.
+ *
+ * @apiError (400: Invalid ISBN) {String} message "Invalid or missing ISBN parameter - please provide a 13-digit number."
+ * @apiError (404: No Book found) {String} message "No Book with {isbn} found."
+ * @apiError (500: Server error) {String} message "Server error - contact support."
+ */
 bookRouter.delete(
     '/isbn/:isbn',
     mwValidISBN,
@@ -391,6 +552,22 @@ bookRouter.delete(
     }
 );
 
+/**
+ * @api {delete} /delete Request to delete multiple books by ID range
+ *
+ * @apiDescription Deletes books with IDs in the specified range.
+ *
+ * @apiName DeleteBooksByIDRange
+ * @apiGroup Book
+ *
+ * @apiQuery {Number} startId The starting ID of the range.
+ * @apiQuery {Number} endId The ending ID of the range.
+ *
+ * @apiSuccess {String} message "Deleted {number} books from ID {startId} to {endId}."
+ *
+ * @apiError (404: No books found) {String} message "No books found in the specified range."
+ * @apiError (500: Server error) {String} message "Server error - contact support."
+ */
 bookRouter.delete(
     '/delete',
     mwValidIdQuery,
