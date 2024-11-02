@@ -36,6 +36,27 @@ function mwValidPaginationQuery(
     }
 }
 
+function mwValidIdQuery(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const startId: string = request.query.startId as string;
+    const endId: string = request.query.endId as string;
+
+    if (
+        validationFunctions.isNumberProvided(startId) &&
+        validationFunctions.isNumberProvided(endId) &&
+        parseInt(startId) <= parseInt(endId)
+    ) {
+        next();
+    } else {
+        response.send({
+            message: 'Invalid start or end id - please refer to documentation',
+        });
+    }
+}
+
 // Middleware to validate the ISBN parameter
 function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     const isbn: string = request.params.isbn as string; // Cast to string for validation
@@ -269,23 +290,30 @@ bookRouter.get(
     }
 );
 
-bookRouter.post('/book', (request: Request, response: Response) => {
-    const isbn13: string = request.body.isbn13;
-    const authors: string = request.body.string;
-    const publication_year: string = request.body.publication_year;
-    const original_title: string = request.body.original_title;
-    const title: string = request.body.title;
-    const rating_avg: string = request.body.rating_avg;
-    const rating_count: string = request.body.rating_count;
-    const rating_1_star: string = request.body.rating_1_star;
-    const rating_2_star: string = request.body.rating_2_star;
-    const rating_3_star: string = request.body.rating_3_star;
-    const rating_4_star: string = request.body.rating_4_star;
-    const rating_5_star: string = request.body.rating_5_star;
-    const image_url: string = request.body.image_url;
-    const image_small_url: string = request.body.image_small_url;
+bookRouter.post('/book', async (request: Request, response: Response) => {
+    const {
+        isbn13,
+        authors,
+        publication_year,
+        original_title,
+        title,
+        rating_avg,
+        rating_count,
+        rating_1_star,
+        rating_2_star,
+        rating_3_star,
+        rating_4_star,
+        rating_5_star,
+        image_url,
+        image_small_url,
+    } = request.body;
+
+    // Get the current max ID from the database
+    const maxIdResult = await pool.query('SELECT MAX(id) FROM BOOKS');
+    const newId = (maxIdResult.rows[0].max || 0) + 1;
 
     const values = [
+        newId,
         isbn13,
         authors,
         publication_year,
@@ -302,7 +330,7 @@ bookRouter.post('/book', (request: Request, response: Response) => {
         image_small_url,
     ];
     const query =
-        'INSERT INTO BOOKS(isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14 RETURNING *';
+        'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
 
     pool.query(query, values)
         .then((result) => {
@@ -358,6 +386,38 @@ bookRouter.delete(
                 console.error(error);
                 response.status(500).send({
                     message: 'server error - contact support',
+                });
+            });
+    }
+);
+
+bookRouter.delete(
+    '/delete',
+    mwValidIdQuery,
+    (request: Request, response: Response) => {
+        const startId = request.query.startId as string;
+        const endId = request.query.endId as string;
+
+        const theQuery = 'DELETE FROM BOOKS WHERE id BETWEEN $1 AND $2';
+        const values = [startId, endId];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    response.status(200).send({
+                        message: `Deleted ${result.rowCount} books from ID ${startId} to ${endId}.`,
+                    });
+                } else {
+                    response.status(404).send({
+                        message: 'No books found in the specified range.',
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('DB Query error on DELETE');
+                console.error(error);
+                response.status(500).send({
+                    message: 'Server error - contact support.',
                 });
             });
     }
