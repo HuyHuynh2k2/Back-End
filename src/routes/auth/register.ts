@@ -3,6 +3,8 @@ import express, { Request, Response, Router, NextFunction } from 'express';
 
 import jwt from 'jsonwebtoken';
 
+import { emailMiddlewareCheck } from '../../core/middleware/emailChecks';
+
 const key = {
     secret: process.env.JSON_WEB_TOKEN,
 };
@@ -24,15 +26,24 @@ export interface IUserRequest extends Request {
     id: number;
 }
 
-// Add more/your own password validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
-const isValidPassword = (password: string): boolean =>
-    isStringProvided(password) && password.length > 7;
+// A valid password additionally must have at least 1 numeric and special character
+const isValidPassword = (password: string): boolean => {
+    const hasNumber: RegExp = /\d/;            // Checks for at least one digit
+    const hasSpecialChar: RegExp = /[!@#$%^&*(),.?":{}|<>]/;  // Checks for at least one special character
 
-// Add more/your own phone number validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
+    return (
+        isStringProvided(password) &&
+        password.length > 7 &&
+        hasNumber.test(password) &&
+        hasSpecialChar.test(password)
+    );
+};
+
+// A valid phone number additionally must not exceed 15 digits in length
 const isValidPhone = (phone: string): boolean =>
-    isStringProvided(phone) && phone.length >= 10;
+    isStringProvided(phone) && 
+    phone.length >= 10 && 
+    phone.length <= 15;
 
 // Add more/your own role validation here. The *rules* must be documented
 // and the client-side validation should match these rules.
@@ -43,24 +54,8 @@ const isValidRole = (priority: string): boolean =>
 
 // Add more/your own email validation here. The *rules* must be documented
 // and the client-side validation should match these rules.
-const isValidEmail = (email: string): boolean =>
+export const isValidEmail = (email: string): boolean =>
     isStringProvided(email) && email.includes('@');
-
-// middleware functions may be defined elsewhere!
-const emailMiddlewareCheck = (
-    request: Request,
-    response: Response,
-    next: NextFunction
-) => {
-    if (isValidEmail(request.body.email)) {
-        next();
-    } else {
-        response.status(400).send({
-            message:
-                'Invalid or missing email  - please refer to documentation',
-        });
-    }
-};
 
 /**
  * @api {post} /register Request to register a user
@@ -210,13 +205,24 @@ registerRouter.post(
                 });
             })
             .catch((error) => {
-                /***********************************************************************
-                 * If we get an error inserting the PWD, we should go back and remove
-                 * the user from the member table. We don't want a member in that table
-                 * without a PWD! That implementation is up to you if you want to add
-                 * that step.
-                 **********************************************************************/
-
+                //remove the user from the member table based on their account id
+                //in case an errors occures when inserting the password
+                const deletePasswordQuery = 
+                    "DELETE FROM Account WHERE account_ID = $1";
+                const deleteValues = [request.id];
+                pool.query(deletePasswordQuery, deleteValues)
+                    .then((result) => {
+                        if (result.rowCount > 0) {
+                            response.status(200).send({
+                                message: `Deleted ${request.id} from ID.`,
+                            });
+                        } else {
+                            response.status(404).send({
+                                message: `No ${request.id} was found.`,
+                            });
+                        }
+                    });
+                
                 //log the error
                 console.error('DB Query error on register');
                 console.error(error);
