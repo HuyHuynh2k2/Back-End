@@ -152,7 +152,7 @@ registerRouter.post(
             request.body.phone,
             request.body.role,
         ];
-        console.dir({ ...request.body, password: '******' });
+        // console.dir({ ...request.body, password: '******' });
         pool.query(theQuery, values)
             .then((result) => {
                 //stash the account_id into the request object to be used in the next function
