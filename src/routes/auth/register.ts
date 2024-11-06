@@ -57,13 +57,16 @@ export const isValidEmail = (email: string): boolean =>
 
 /**
  * @api {post} /register Request to register a user
- *
- * @apiDescription Document this route. !**Document the password rules here**!
- * !**Document the role rules here**!
- *
  * @apiName PostRegister
  * @apiGroup Auth
- *
+ * 
+ * @apiDescription 
+ * - **Password**: Must be a non-empty string containing at least 1 numerical and 1 special character.
+ * - **Phone number**: Must be a non-empty series of numbers, with a length between 10 and 15 digits.
+ * - **Email**: Must be a non-empty string that includes the '@' character.
+ * - **Role**: Must be a number with a value between 1 and 5.
+ * - **First & Last Name**: Must be non-empty strings.
+ * 
  * @apiBody {String} firstname a users first name
  * @apiBody {String} lastname a users last name
  * @apiBody {String} email a users email *unique

@@ -228,7 +228,7 @@ signinRouter.put(
                 `UPDATE Account_Credential 
                 SET salted_hash = $1
                 WHERE account_id = $2`;
-                const values = [storedSaltedHash, result.rows[0].account_id];
+                const values = [providedSaltedHash, result.rows[0].account_id];
                 pool.query(theQuery, values)
                 .catch((error) => {
                     //log the error
@@ -238,6 +238,19 @@ signinRouter.put(
                         message: 'Server error - contact support team',
                     });
                 });
+
+                const testQuery = 
+        `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
+        FROM Account_Credential
+        INNER JOIN Account 
+        ON Account_Credential.account_id=Account.account_id 
+        WHERE Account.email=$1`;
+        const testValues = [request.body.email];
+        pool.query(testQuery, testValues).then((result) => {
+            console.log(result.rows[0]);
+        });
+
+
             } else {
                 //credentials did match => old password was still used
                 response.status(400).send({
