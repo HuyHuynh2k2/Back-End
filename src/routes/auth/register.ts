@@ -3,8 +3,6 @@ import express, { Request, Response, Router, NextFunction } from 'express';
 
 import jwt from 'jsonwebtoken';
 
-import { emailMiddlewareCheck } from '../../core/middleware/emailChecks';
-
 const key = {
     secret: process.env.JSON_WEB_TOKEN,
 };
@@ -27,7 +25,7 @@ export interface IUserRequest extends Request {
 }
 
 // A valid password additionally must have at least 1 numeric and special character
-const isValidPassword = (password: string): boolean => {
+export const isValidPassword = (password: string): boolean => {
     const hasNumber: RegExp = /\d/;            // Checks for at least one digit
     const hasSpecialChar: RegExp = /[!@#$%^&*(),.?":{}|<>]/;  // Checks for at least one special character
 
@@ -41,14 +39,14 @@ const isValidPassword = (password: string): boolean => {
 
 // A valid phone number additionally must not exceed 15 digits in length
 const isValidPhone = (phone: string): boolean =>
-    isStringProvided(phone) && 
+    isNumberProvided(phone) && 
     phone.length >= 10 && 
     phone.length <= 15;
 
 // Add more/your own role validation here. The *rules* must be documented
 // and the client-side validation should match these rules.
 const isValidRole = (priority: string): boolean =>
-    validationFunctions.isNumberProvided(priority) &&
+    isNumberProvided(priority) &&
     parseInt(priority) >= 1 &&
     parseInt(priority) <= 5;
 
@@ -88,7 +86,16 @@ export const isValidEmail = (email: string): boolean =>
  */
 registerRouter.post(
     '/register',
-    emailMiddlewareCheck, // these middleware functions may be defined elsewhere!
+    (request: Request, response: Response, next: NextFunction) => {
+        if (isValidEmail(request.body.email)) {
+            next();
+        } else {
+            response.status(400).send({
+                message:
+                    'Invalid or missing email  - please refer to documentation',
+            });
+        }
+    },
     (request: Request, response: Response, next: NextFunction) => {
         //Verify that the caller supplied all the parameters
         //In js, empty strings or null values evaluate to false
