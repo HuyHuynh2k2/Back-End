@@ -93,15 +93,31 @@ function mwValidAuthor(
     response: Response,
     next: NextFunction
 ) {
-    const author: string = request.query.author as string;
+    const author: string = request.params.author as string;
 
-    if (!isStringProvided(author)) {
+    if (!author || !isNaN(Number(author)) || author.trim().length === 0) {
         response.status(400).send({
             message: 'Invalid Author',
         });
+    } else {
+        next();
     }
+}
 
-    next();
+function mwValidPublication(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const year: string = request.params.publicationYear as string;
+
+    if (isNumberProvided(year)) {
+        next();
+    } else {
+        response.status(400).send({
+            message: 'Invalid Year',
+        });
+    }
 }
 
 /**
@@ -294,7 +310,9 @@ bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
                     book: finalResult,
                 });
             } else {
-                response.send('No Books found with given rating');
+                response.send({
+                    message: 'No Books found with given rating',
+                });
             }
         })
         .catch((error) => {
@@ -318,11 +336,13 @@ bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
  *
  * @apiSuccess {Object[]} books Array of book objects published in the specified year.
  *
- * @apiError (404: No books found) {String} message "No books found with given publication."
- * @apiError (500: Server error) {String} message "Server error - contact support team."
+ * @apiError (400: Bad Request) {string} message "Invalid Year"
+ * @apiError (404: No books found) {String} message "No books found with given publication"
+ * @apiError (500: Server error) {String} message "Server error - contact support team"
  */
 bookRouter.get(
     '/publication/:publicationYear',
+    mwValidPublication,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
         const values = [request.params.publicationYear];
@@ -341,7 +361,7 @@ bookRouter.get(
                         book: finalResult,
                     });
                 } else {
-                    response.send({
+                    response.status(404).send({
                         message: 'No books found with given publication',
                     });
                 }
