@@ -28,8 +28,8 @@ function mwValidPaginationQuery(
     response: Response,
     next: NextFunction
 ) {
-    const page: string = request.query.page as string;
-    const limit: string = request.query.limit as string;
+    const page: string = request.params.page as string;
+    const limit: string = request.params.limit as string;
 
     if (isNumberProvided(page) && isNumberProvided(limit)) {
         next();
@@ -51,8 +51,8 @@ function mwValidIdQuery(
     response: Response,
     next: NextFunction
 ) {
-    const startId: string = request.query.startId as string;
-    const endId: string = request.query.endId as string;
+    const startId: string = request.params.startId as string;
+    const endId: string = request.params.endId as string;
 
     if (
         validationFunctions.isNumberProvided(startId) &&
@@ -221,7 +221,8 @@ bookRouter.get(
  * @apiError (404: No books found) {String} message "No books found for this author."
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
-bookRouter.get('/author/:author',
+bookRouter.get(
+    '/author/:author',
     mwValidAuthor,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE authors = $1';
@@ -270,7 +271,8 @@ bookRouter.get('/author/:author',
  * @apiError (404: No books found) {String} message "No books found with given original title."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
-bookRouter.get('/original_title/:original_title',
+bookRouter.get(
+    '/original_title/:original_title',
     mwValidOriginalTitle,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE original_title = $1';
@@ -319,43 +321,46 @@ bookRouter.get('/original_title/:original_title',
  * @apiError (404: No books found) {String} message "No Books found with given rating."
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
-bookRouter.get('/average_rating/:rating_avg', 
+bookRouter.get(
+    '/average_rating/:rating_avg',
     mwValidRating,
     (request: Request, response: Response) => {
-    const tolerance = 0.005;
-    const averageRating = parseFloat(request.params.rating_avg);
-    const min = averageRating - tolerance;
-    const max = averageRating + tolerance;
+        const tolerance = 0.005;
+        const averageRating = parseFloat(request.params.rating_avg);
+        const min = averageRating - tolerance;
+        const max = averageRating + tolerance;
 
-    const theQuery = 'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
-    const values = [min, max];
+        const theQuery =
+            'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
+        const values = [min, max];
 
-    pool.query(theQuery, values)
-        .then((result) => {
-            if (result.rowCount > 0) {
-                const rows = result.rows;
-                const finalResult: Book[] = [];
-                for (const row of rows) {
-                    const book: Book = createBook(row);
-                    finalResult.push(book);
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    const rows = result.rows;
+                    const finalResult: Book[] = [];
+                    for (const row of rows) {
+                        const book: Book = createBook(row);
+                        finalResult.push(book);
+                    }
+                    response.send({
+                        book: finalResult,
+                    });
+                } else {
+                    response.status(404).send({
+                        message: 'No Books found with given rating',
+                    });
                 }
-                response.send({
-                    book: finalResult,
+            })
+            .catch((error) => {
+                console.error('BD query error on GET books by ratings');
+                console.log(error);
+                response.status(500).send({
+                    message: 'Server error - contact support team',
                 });
-            } else {
-                response.status(404).send({
-                    message: 'No Books found with given rating',
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('BD query error on GET books by ratings');
-            console.log(error);
-            response.status(500).send({
-                message: 'Server error - contact support team',
             });
-        });
-});
+    }
+);
 
 /**
  * @api {get} /publication_year/:publication_year Request to retrieve books by publication year
@@ -612,8 +617,8 @@ bookRouter.delete(
     '/delete/:startId/:endId',
     mwValidIdQuery,
     async (request: Request, response: Response) => {
-        const startId = request.query.startId as string;
-        const endId = request.query.endId as string;
+        const startId = request.params.startId as string;
+        const endId = request.params.endId as string;
 
         const theQuery = 'DELETE FROM BOOKS WHERE id BETWEEN $1 AND $2';
         const values = [startId, endId];
@@ -632,6 +637,45 @@ bookRouter.delete(
             })
             .catch((error) => {
                 console.error('DB Query error on DELETE');
+                console.error(error);
+                response.status(500).send({
+                    message: 'Server error - contact support.',
+                });
+            });
+    }
+);
+
+bookRouter.put( 
+    '/ratings/:isbn/:oneStar/:twoStar/:threeStar/:fourStar/:fiveStar',
+    mwValidISBN,
+    async (request: Request, response: Response) => {
+        const isbn = request.params.isbn;
+        const oneStar: number = +request.params.oneStar;
+        const twoStar: number = +request.params.twoStar;
+        const threeStar: number = +request.params.threeStar;
+        const fourStar: number = +request.params.fourStar;
+        const fiveStar: number = +request.params.fiveStar;
+        const ratingCount = oneStar + twoStar + threeStar + fourStar + fiveStar
+        const ratingAvg: number = Math.floor((oneStar + twoStar * 2 + threeStar * 3 + fourStar * 4 + fiveStar * 5) / ratingCount)
+
+        const query =
+            'UPDATE BOOKS SET rating_1_star = rating_1_star + $1, rating_2_star = rating_2_star + $2, rating_3_star = rating_3_star + $3, rating_4_star = rating_4_star + $4, rating_5_star = rating_5_star + $5, rating_count = rating_count + $6 , rating_avg = (rating_avg + $7) / 2   WHERE BOOKS.isbn13 = $8 RETURNING *';
+        const values = [oneStar, twoStar, threeStar, fourStar, fiveStar, ratingCount, ratingAvg, isbn];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    response.status(200).send({
+                        message: `Updated books ${result.rows[0].title} `,
+                    });
+                } else {
+                    response.status(404).send({
+                        message: 'No book found.',
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('DB Query error on UPDATE');
                 console.error(error);
                 response.status(500).send({
                     message: 'Server error - contact support.',
