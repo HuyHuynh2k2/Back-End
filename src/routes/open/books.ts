@@ -95,73 +95,29 @@ function mwValidAuthor(
 ) {
     const author: string = request.params.author as string;
 
-    if (!isStringProvided(author)) {
+    if (!author || !isNaN(Number(author)) || author.trim().length === 0) {
         response.status(400).send({
             message: 'Invalid Author',
         });
+    } else {
+        next();
     }
-
-    next();
 }
 
-/**
- * Middleware to validate the original title query parameter.
- * Checks if the provided orignial title is a valid string.
- */
-function mwValidOriginalTitle(
+function mwValidPublication(
     request: Request,
     response: Response,
     next: NextFunction
 ) {
-    const original_title: string = request.params.original_title as string;
+    const year: string = request.params.publicationYear as string;
 
-    if (!isStringProvided(original_title)) {
+    if (isNumberProvided(year)) {
+        next();
+    } else {
         response.status(400).send({
-            message: 'Invalid Original Title',
+            message: 'Invalid Year',
         });
     }
-
-    next();
-}
-
-/**
- * Middleware to validate the average rating query parameter.
- * Checks if the provided average rating is a valid number.
- */
-function mwValidAverageRating(
-    request: Request,
-    response: Response,
-    next: NextFunction
-) {
-    const average_rating: string = request.params.rating as string;
-
-    if (!isNumberProvided(average_rating)) {
-        response.status(400).send({
-            message: 'Invalid Average Rating',
-        });
-    }
-
-    next();
-}
-
-/**
- * Middleware to validate the publication year query parameter.
- * Checks if the provided publication year is a valid number.
- */
-function mwValidPublicationYear(
-    request: Request,
-    response: Response,
-    next: NextFunction
-) {
-    const publication_year: string = request.params.publicationYear as string;
-
-    if (!isNumberProvided(publication_year)) {
-        response.status(400).send({
-            message: 'Invalid Publication Year',
-        });
-    }
-
-    next();
 }
 
 /**
@@ -355,8 +311,8 @@ bookRouter.get('/average_rating/:rating',
                     book: finalResult,
                 });
             } else {
-                response.status(404).send({
-                    message: 'No books found with given average rating',
+                response.send({
+                    message: 'No Books found with given rating',
                 });
             }
         })
@@ -381,11 +337,13 @@ bookRouter.get('/average_rating/:rating',
  *
  * @apiSuccess {Object[]} books Array of book objects published in the specified year.
  *
- * @apiError (404: No books found) {String} message "No books found with given publication."
- * @apiError (500: Server error) {String} message "Server error - contact support team."
+ * @apiError (400: Bad Request) {string} message "Invalid Year"
+ * @apiError (404: No books found) {String} message "No books found with given publication"
+ * @apiError (500: Server error) {String} message "Server error - contact support team"
  */
-bookRouter.get('/publication_year/:publicationYear',
-    mwValidPublicationYear,
+bookRouter.get(
+    '/publication/:publicationYear',
+    mwValidPublication,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
         const values = [request.params.publicationYear];
@@ -405,7 +363,7 @@ bookRouter.get('/publication_year/:publicationYear',
                     });
                 } else {
                     response.status(404).send({
-                        message: "No books found with given publication",
+                        message: 'No books found with given publication',
                     });
                 }
             })
