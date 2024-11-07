@@ -104,12 +104,44 @@ function mwValidAuthor(
     }
 }
 
+function mwValidRating(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const rating: string = request.params.rating_avg as string;
+
+    if (isNumberProvided(rating)) {
+        next();
+    } else {
+        response.status(400).send({
+            message: 'Invalid Average Rating',
+        });
+    }
+}
+
+function mwValidOriginalTitle(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const original_title: string = request.params.original_title as string;
+
+    if (isStringProvided(original_title)) {
+        next();
+    } else {
+        response.status(400).send({
+            message: 'Invalid Original Title',
+        });
+    }
+}
+
 function mwValidPublication(
     request: Request,
     response: Response,
     next: NextFunction
 ) {
-    const year: string = request.params.publicationYear as string;
+    const year: string = request.params.publication_year as string;
 
     if (isNumberProvided(year)) {
         next();
@@ -189,8 +221,7 @@ bookRouter.get(
  * @apiError (404: No books found) {String} message "No books found for this author."
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
-bookRouter.get(
-    '/author/:author',
+bookRouter.get('/author/:author',
     mwValidAuthor,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE authors = $1';
@@ -239,8 +270,8 @@ bookRouter.get(
  * @apiError (404: No books found) {String} message "No books found with given original title."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
-bookRouter.get(
-    '/original_title/:original_title',
+bookRouter.get('/original_title/:original_title',
+    mwValidOriginalTitle,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE original_title = $1';
         const values = [request.params.original_title];
@@ -274,7 +305,7 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /ratings/:rating Request to retrieve books by average rating
+ * @api {get} /average_rating/:rating_avg Request to retrieve books by average rating
  *
  * @apiDescription Retrieves all book entries with an average rating within a certain tolerance.
  *
@@ -288,9 +319,11 @@ bookRouter.get(
  * @apiError (404: No books found) {String} message "No Books found with given rating."
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
-bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
+bookRouter.get('/average_rating/:rating_avg', 
+    mwValidRating,
+    (request: Request, response: Response) => {
     const tolerance = 0.005;
-    const averageRating = parseFloat(request.params.rating);
+    const averageRating = parseFloat(request.params.rating_avg);
     const min = averageRating - tolerance;
     const max = averageRating + tolerance;
 
@@ -310,7 +343,7 @@ bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
                     book: finalResult,
                 });
             } else {
-                response.send({
+                response.status(404).send({
                     message: 'No Books found with given rating',
                 });
             }
@@ -325,7 +358,7 @@ bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
 });
 
 /**
- * @api {get} /publication/:publicationYear Request to retrieve books by publication year
+ * @api {get} /publication_year/:publication_year Request to retrieve books by publication year
  *
  * @apiDescription Retrieves all book entries published in the specified year.
  *
@@ -341,11 +374,11 @@ bookRouter.get('/ratings/:rating', (request: Request, response: Response) => {
  * @apiError (500: Server error) {String} message "Server error - contact support team"
  */
 bookRouter.get(
-    '/publication/:publicationYear',
+    '/publication/:publication_year',
     mwValidPublication,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
-        const values = [request.params.publicationYear];
+        const values = [request.params.publication_year];
 
         pool.query(theQuery, values)
             .then((result) => {
@@ -392,6 +425,7 @@ bookRouter.get(
  * @apiError (400: Invalid Pagination) {String} message "Invalid or missing pagination parameters - please refer to documentation."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
+
 bookRouter.get(
     '/all/:page/:limit',
     mwValidPaginationQuery,
@@ -577,9 +611,9 @@ bookRouter.delete(
 bookRouter.delete(
     '/delete/:startId/:endId',
     mwValidIdQuery,
-    (request: Request, response: Response) => {
-        const startId = request.params.startId as string;
-        const endId = request.params.endId as string;
+    async (request: Request, response: Response) => {
+        const startId = request.query.startId as string;
+        const endId = request.query.endId as string;
 
         const theQuery = 'DELETE FROM BOOKS WHERE id BETWEEN $1 AND $2';
         const values = [startId, endId];
@@ -622,7 +656,7 @@ function createBook(row: any): Book {
     const book = new Book(
         row.isbn13,
         row.authors,
-        row.publication,
+        row.publication_year,
         row.original_title,
         row.title,
         ratings,

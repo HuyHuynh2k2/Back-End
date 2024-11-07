@@ -24,53 +24,49 @@ export interface IUserRequest extends Request {
     id: number;
 }
 
-// Add more/your own password validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
-const isValidPassword = (password: string): boolean =>
-    isStringProvided(password) && password.length > 7;
+// A valid password additionally must have at least 1 numeric and special character
+export const isValidPassword = (password: string): boolean => {
+    const hasNumber: RegExp = /\d/;            // Checks for at least one digit
+    const hasSpecialChar: RegExp = /[!@#$%^&*(),.?":{}|<>]/;  // Checks for at least one special character
 
-// Add more/your own phone number validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
+    return (
+        isStringProvided(password) &&
+        password.length > 7 &&
+        hasNumber.test(password) &&
+        hasSpecialChar.test(password)
+    );
+};
+
+// A valid phone number additionally must not exceed 15 digits in length
 const isValidPhone = (phone: string): boolean =>
-    isStringProvided(phone) && phone.length >= 10;
+    isNumberProvided(phone) && 
+    phone.length >= 10 && 
+    phone.length <= 15;
 
 // Add more/your own role validation here. The *rules* must be documented
 // and the client-side validation should match these rules.
 const isValidRole = (priority: string): boolean =>
-    validationFunctions.isNumberProvided(priority) &&
+    isNumberProvided(priority) &&
     parseInt(priority) >= 1 &&
     parseInt(priority) <= 5;
 
 // Add more/your own email validation here. The *rules* must be documented
 // and the client-side validation should match these rules.
-const isValidEmail = (email: string): boolean =>
+export const isValidEmail = (email: string): boolean =>
     isStringProvided(email) && email.includes('@');
-
-// middleware functions may be defined elsewhere!
-const emailMiddlewareCheck = (
-    request: Request,
-    response: Response,
-    next: NextFunction
-) => {
-    if (isValidEmail(request.body.email)) {
-        next();
-    } else {
-        response.status(400).send({
-            message:
-                'Invalid or missing email  - please refer to documentation',
-        });
-    }
-};
 
 /**
  * @api {post} /register Request to register a user
- *
- * @apiDescription Document this route. !**Document the password rules here**!
- * !**Document the role rules here**!
- *
  * @apiName PostRegister
  * @apiGroup Auth
- *
+ * 
+ * @apiDescription 
+ * - **Password**: Must be a non-empty string containing at least 1 numerical and 1 special character.
+ * - **Phone number**: Must be a non-empty series of numbers, with a length between 10 and 15 digits.
+ * - **Email**: Must be a non-empty string that includes the '@' character.
+ * - **Role**: Must be a number with a value between 1 and 5.
+ * - **First & Last Name**: Must be non-empty strings.
+ * 
  * @apiBody {String} firstname a users first name
  * @apiBody {String} lastname a users last name
  * @apiBody {String} email a users email *unique
@@ -93,7 +89,16 @@ const emailMiddlewareCheck = (
  */
 registerRouter.post(
     '/register',
-    emailMiddlewareCheck, // these middleware functions may be defined elsewhere!
+    (request: Request, response: Response, next: NextFunction) => {
+        if (isValidEmail(request.body.email)) {
+            next();
+        } else {
+            response.status(400).send({
+                message:
+                    'Invalid or missing email  - please refer to documentation',
+            });
+        }
+    },
     (request: Request, response: Response, next: NextFunction) => {
         //Verify that the caller supplied all the parameters
         //In js, empty strings or null values evaluate to false
@@ -210,13 +215,24 @@ registerRouter.post(
                 });
             })
             .catch((error) => {
-                /***********************************************************************
-                 * If we get an error inserting the PWD, we should go back and remove
-                 * the user from the member table. We don't want a member in that table
-                 * without a PWD! That implementation is up to you if you want to add
-                 * that step.
-                 **********************************************************************/
-
+                //remove the user from the member table based on their account id
+                //in case an errors occures when inserting the password
+                const deletePasswordQuery = 
+                    "DELETE FROM Account WHERE account_ID = $1";
+                const deleteValues = [request.id];
+                pool.query(deletePasswordQuery, deleteValues)
+                    .then((result) => {
+                        if (result.rowCount > 0) {
+                            response.status(200).send({
+                                message: `Deleted ${request.id} from ID.`,
+                            });
+                        } else {
+                            response.status(404).send({
+                                message: `No ${request.id} was found.`,
+                            });
+                        }
+                    });
+                
                 //log the error
                 console.error('DB Query error on register');
                 console.error(error);
