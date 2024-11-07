@@ -557,7 +557,7 @@ bookRouter.delete(
 bookRouter.delete(
     '/delete',
     mwValidIdQuery,
-    (request: Request, response: Response) => {
+    async (request: Request, response: Response) => {
         const startId = request.query.startId as string;
         const endId = request.query.endId as string;
 

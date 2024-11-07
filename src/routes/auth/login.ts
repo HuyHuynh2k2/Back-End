@@ -62,8 +62,8 @@ signinRouter.post(
     (request: AuthRequest, response: Response) => {
         const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
         FROM Account_Credential
-        INNER JOIN Account ON
-        Account_Credential.account_id=Account.account_id 
+        INNER JOIN Account 
+        ON Account_Credential.account_id=Account.account_id 
         WHERE Account.email=$1`;
         const values = [request.body.email];
         pool.query(theQuery, values)
@@ -163,7 +163,7 @@ signinRouter.put(
             });
         }
     },
-    (request: AuthRequest, response: Response) => {
+    async (request: AuthRequest, response: Response) => {
         //get the old salted hashed password from the database to compare it with the new password
         const theQuery = 
         `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
@@ -238,19 +238,6 @@ signinRouter.put(
                         message: 'Server error - contact support team',
                     });
                 });
-
-                const testQuery = 
-        `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
-        FROM Account_Credential
-        INNER JOIN Account 
-        ON Account_Credential.account_id=Account.account_id 
-        WHERE Account.email=$1`;
-        const testValues = [request.body.email];
-        pool.query(testQuery, testValues).then((result) => {
-            console.log(result.rows[0]);
-        });
-
-
             } else {
                 //credentials did match => old password was still used
                 response.status(400).send({
