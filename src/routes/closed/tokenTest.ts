@@ -1,5 +1,5 @@
 // express is the framework we're going to use to handle requests
-import express, { Request, Response, Router } from 'express';
+import express, { NextFunction, Request, Response, Router } from 'express';
 import { IJwtRequest } from '../../core/models';
 
 // retrieve the router object from express
@@ -18,7 +18,7 @@ const tokenTestRouter: Router = express.Router();
  * @apiError (401: Auth token is not supplied) {String} message "Auth token is not supplied" when no Auth token
  * is provided
  */
-tokenTestRouter.get('/', (request: IJwtRequest, response: Response) => {
+tokenTestRouter.get('/', (request: IJwtRequest, response: Response, next: NextFunction) => {
     response.send({
         message: `Your token is valid and your role is: ${request.claims.role}`,
     });

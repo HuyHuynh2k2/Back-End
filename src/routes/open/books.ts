@@ -104,12 +104,44 @@ function mwValidAuthor(
     }
 }
 
+function mwValidRating(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const rating: string = request.params.rating_avg as string;
+
+    if (isNumberProvided(rating)) {
+        next();
+    } else {
+        response.status(400).send({
+            message: 'Invalid Average Rating',
+        });
+    }
+}
+
+function mwValidOriginalTitle(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const original_title: string = request.params.original_title as string;
+
+    if (isStringProvided(original_title)) {
+        next();
+    } else {
+        response.status(400).send({
+            message: 'Invalid Original Title',
+        });
+    }
+}
+
 function mwValidPublication(
     request: Request,
     response: Response,
     next: NextFunction
 ) {
-    const year: string = request.params.publicationYear as string;
+    const year: string = request.params.publication_year as string;
 
     if (isNumberProvided(year)) {
         next();
@@ -273,7 +305,7 @@ bookRouter.get('/original_title/:original_title',
 );
 
 /**
- * @api {get} /average_rating/:rating Request to retrieve books by average rating
+ * @api {get} /average_rating/:rating_avg Request to retrieve books by average rating
  *
  * @apiDescription Retrieves all book entries with an average rating within a certain tolerance.
  *
@@ -287,11 +319,11 @@ bookRouter.get('/original_title/:original_title',
  * @apiError (404: No books found) {String} message "No Books found with given rating."
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
-bookRouter.get('/average_rating/:rating', 
-    mwValidAverageRating,
+bookRouter.get('/average_rating/:rating_avg', 
+    mwValidRating,
     (request: Request, response: Response) => {
     const tolerance = 0.005;
-    const averageRating = parseFloat(request.params.rating);
+    const averageRating = parseFloat(request.params.rating_avg);
     const min = averageRating - tolerance;
     const max = averageRating + tolerance;
 
@@ -311,7 +343,7 @@ bookRouter.get('/average_rating/:rating',
                     book: finalResult,
                 });
             } else {
-                response.send({
+                response.status(404).send({
                     message: 'No Books found with given rating',
                 });
             }
@@ -326,7 +358,7 @@ bookRouter.get('/average_rating/:rating',
 });
 
 /**
- * @api {get} /publication_year/:publicationYear Request to retrieve books by publication year
+ * @api {get} /publication_year/:publication_year Request to retrieve books by publication year
  *
  * @apiDescription Retrieves all book entries published in the specified year.
  *
@@ -342,11 +374,11 @@ bookRouter.get('/average_rating/:rating',
  * @apiError (500: Server error) {String} message "Server error - contact support team"
  */
 bookRouter.get(
-    '/publication/:publicationYear',
+    '/publication/:publication_year',
     mwValidPublication,
     (request: Request, response: Response) => {
         const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
-        const values = [request.params.publicationYear];
+        const values = [request.params.publication_year];
 
         pool.query(theQuery, values)
             .then((result) => {
@@ -622,7 +654,7 @@ function createBook(row: any): Book {
     const book = new Book(
         row.isbn13,
         row.authors,
-        row.publication,
+        row.publication_year,
         row.original_title,
         row.title,
         ratings,

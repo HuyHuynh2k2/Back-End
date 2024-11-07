@@ -6,6 +6,6 @@ import { openRoutes } from '../open';
 
 const closedRoutes: Router = express.Router();
 
-closedRoutes.use('/c', checkToken, tokenTestRouter, openRoutes);
+closedRoutes.use('/c', checkToken, openRoutes);
 
 export { closedRoutes };
