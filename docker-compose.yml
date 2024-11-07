@@ -21,12 +21,11 @@ services:
     mongo:
         image: mongo:latest
         ports:
-            - 27017:27017
+            - 27018:27017
         restart: always
         environment:
-            MONGO_INITDB_ROOT_USERNAME: tcss460
-            MONGO_INITDB_ROOT_PASSWORD: tcss460
-            MONGO_INITDB_DATABASE: tcss460123
+            MONGO_INITDB_ROOT_USERNAME: Admin
+            MONGO_INITDB_ROOT_PASSWORD: PleaseWork
         container_name: lecture-mongo
         volumes:
             - ~/apps/mongo:/data

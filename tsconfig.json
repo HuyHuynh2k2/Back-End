@@ -5,7 +5,12 @@
         "target": "es6",
         "moduleResolution": "node",
         "sourceMap": true,
-        "outDir": "build"
+        "outDir": "build",
+        "typeRoots": [
+            "./node_modules/@types"
+        ]
     },
-    "lib": ["es2015"]
+    "lib": [
+        "es2015"
+    ]
 }

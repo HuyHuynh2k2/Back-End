@@ -30,6 +30,7 @@
         "@types/pg": "^8.10.2",
         "@typescript-eslint/eslint-plugin": "^6.6.0",
         "@typescript-eslint/parser": "^6.6.0",
+        "@types/mongoose": "^x.x.x",
         "dotenv": "^16.3.1",
         "eslint": "^8.48.0",
         "eslint-config-prettier": "^9.0.0",
@@ -46,6 +47,7 @@
         "cors": "^2.8.5",
         "express": "^4.17.1",
         "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.8.0",
         "pg": "^8.11.3"
     }
 }
