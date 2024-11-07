@@ -79,7 +79,7 @@ function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     } else {
         response.status(400).send({
             message:
-                'Invalid or missing ISBN parameter - please provide a 13-digit number',
+                'Invalid or missing ISBN parameter - please provide a 13-digit number.',
         });
     }
 }
@@ -97,7 +97,7 @@ function mwValidAuthor(
 
     if (!author || !isNaN(Number(author)) || author.trim().length === 0) {
         response.status(400).send({
-            message: 'Invalid Author',
+            message: 'Invalid Author.',
         });
     } else {
         next();
@@ -191,7 +191,7 @@ bookRouter.get(
                     response.send({ book });
                 } else {
                     response.status(404).send({
-                        message: 'Book not found',
+                        message: 'Book not found.',
                     });
                 }
             })
@@ -199,7 +199,7 @@ bookRouter.get(
                 console.error('DB Query error on GET book by ISBN');
                 console.error(error);
                 response.status(500).send({
-                    message: 'Server error - contact support HUY HUYNH',
+                    message: 'Server error - contact support team',
                 });
             });
     }
@@ -219,7 +219,7 @@ bookRouter.get(
  *
  * @apiError (400: Invalid Author) {String} message "Invalid Author."
  * @apiError (404: No books found) {String} message "No books found for this author."
- * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+ * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
 bookRouter.get('/author/:author',
     mwValidAuthor,
@@ -241,7 +241,7 @@ bookRouter.get('/author/:author',
                     });
                 } else {
                     response.status(404).send({
-                        message: 'No books found for this author',
+                        message: 'No books found for this author.',
                     });
                 }
             })
@@ -249,7 +249,7 @@ bookRouter.get('/author/:author',
                 console.error('DB query error on GET books by author');
                 console.error(error);
                 response.status(500).send({
-                    message: 'Server error - contact support HUY HUYNH',
+                    message: 'Server error - contact support team.',
                 });
             });
     }
@@ -290,7 +290,7 @@ bookRouter.get('/original_title/:original_title',
                     });
                 } else {
                     response.status(404).send({
-                        message: 'No books found with given original title',
+                        message: 'No books found with given original title.',
                     });
                 }
             })
@@ -425,11 +425,13 @@ bookRouter.get(
  * @apiError (400: Invalid Pagination) {String} message "Invalid or missing pagination parameters - please refer to documentation."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
-bookRouter.get('/all',
+
+bookRouter.get(
+    '/all/:page/:limit',
     mwValidPaginationQuery,
     (request: Request, response: Response) => {
-        const page: number = parseInt(request.query.page as string, 10);
-        const limit: number = parseInt(request.query.limit as string, 10);
+        const page: number = parseInt(request.params.page, 10);
+        const limit: number = parseInt(request.params.limit, 10);
         const offset: number = (page - 1) * limit;
 
         const theQuery = 'SELECT * FROM BOOKS LIMIT $1 OFFSET $2';
@@ -453,7 +455,7 @@ bookRouter.get('/all',
                 );
                 console.error(error);
                 response.status(500).send({
-                    message: 'Server error - contact support HUY HUYNH',
+                    message: 'Server error - contact support.',
                 });
             });
     }
@@ -607,7 +609,7 @@ bookRouter.delete(
  * @apiError (500: Server error) {String} message "Server error - contact support."
  */
 bookRouter.delete(
-    '/delete',
+    '/delete/:startId/:endId',
     mwValidIdQuery,
     async (request: Request, response: Response) => {
         const startId = request.query.startId as string;
