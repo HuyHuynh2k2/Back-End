@@ -93,7 +93,7 @@ function mwValidAuthor(
     response: Response,
     next: NextFunction
 ) {
-    const author: string = request.query.author as string;
+    const author: string = request.params.author as string;
 
     if (!isStringProvided(author)) {
         response.status(400).send({
@@ -113,7 +113,7 @@ function mwValidOriginalTitle(
     response: Response,
     next: NextFunction
 ) {
-    const original_title: string = request.query.original_title as string;
+    const original_title: string = request.params.original_title as string;
 
     if (!isStringProvided(original_title)) {
         response.status(400).send({
@@ -133,7 +133,7 @@ function mwValidAverageRating(
     response: Response,
     next: NextFunction
 ) {
-    const average_rating: string = request.query.rating as string;
+    const average_rating: string = request.params.rating as string;
 
     if (!isNumberProvided(average_rating)) {
         response.status(400).send({
@@ -153,7 +153,7 @@ function mwValidPublicationYear(
     response: Response,
     next: NextFunction
 ) {
-    const publication_year: string = request.query.publicationYear as string;
+    const publication_year: string = request.params.publicationYear as string;
 
     if (!isNumberProvided(publication_year)) {
         response.status(400).send({
@@ -355,7 +355,9 @@ bookRouter.get('/average_rating/:rating',
                     book: finalResult,
                 });
             } else {
-                response.send('No Books found with given rating');
+                response.status(404).send({
+                    message: 'No books found with given average rating',
+                });
             }
         })
         .catch((error) => {
@@ -402,8 +404,8 @@ bookRouter.get('/publication_year/:publicationYear',
                         book: finalResult,
                     });
                 } else {
-                    response.send({
-                        message: 'No books found with given publication',
+                    response.status(404).send({
+                        message: "No books found with given publication",
                     });
                 }
             })

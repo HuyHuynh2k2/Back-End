@@ -55,7 +55,7 @@ signinRouter.post(
             next();
         } else {
             response.status(400).send({
-                message: 'Missing required information',
+                message: 'Invalid or Missing Required Information',
             });
         }
     },
@@ -159,7 +159,7 @@ signinRouter.put(
             next();
         } else {
             response.status(400).send({
-                message: 'Missing required information',
+                message: 'Invalid or Missing Required Information',
             });
         }
     },
