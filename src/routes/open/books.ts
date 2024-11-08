@@ -630,8 +630,8 @@ bookRouter.delete(
  * @apiName DeleteBooksByIDRange
  * @apiGroup Book
  *
- * @apiQuery {Number} startId The starting ID of the range.
- * @apiQuery {Number} endId The ending ID of the range.
+ * @apiParam {Number} startId The starting ID of the range.
+ * @apiParam {Number} endId The ending ID of the range.
  *
  * @apiSuccess {String} message "Deleted {number} books from ID {startId} to {endId}."
  *
@@ -670,6 +670,26 @@ bookRouter.delete(
     }
 );
 
+/**
+ * @api {put} /ratings Request to update the ratings of an existing book
+ *
+ * @apiDescription Updates a book's ratings
+ *
+ * @apiName UpdateBookRatings
+ * @apiGroup Book
+ *
+ * @apiParam {Number} isbn The isbn of the book.
+ * @apiParam {Number} oneStar The number of one stars in the book.
+ * @apiParam {Number} twoStar The number of two stars in the book.
+ * @apiParam {Number} threeStar The number of three stars in the book.
+ * @apiParam {Number} fourStar The number of four stars in the book.
+ * @apiParam {Number} fiveStar The number of five stars in the book.
+ *
+ * @apiSuccess {String} message "Updated books {book title}."
+ *
+ * @apiError (404: No book found) {String} message "No book found."
+ * @apiError (500: Server error) {String} message "Server error - contact support."
+ */
 bookRouter.put(
     '/ratings/:isbn/:oneStar/:twoStar/:threeStar/:fourStar/:fiveStar',
     mwValidISBN,
