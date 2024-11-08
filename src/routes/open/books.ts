@@ -10,7 +10,7 @@ import express, {
 
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
-import { Book, Ratings, UrlIcon } from '../../core/utilities/implements';
+import { Book, Ratings, UrlIcon } from './implements';
 
 // Create a new router instance for book-related routes
 const bookRouter: Router = express.Router();
@@ -19,6 +19,10 @@ const bookRouter: Router = express.Router();
 const isStringProvided = validationFunctions.isStringProvided;
 const isNumberProvided = validationFunctions.isNumberProvided;
 
+/**
+ * Middleware to validate pagination query parameters.
+ * Checks if 'page' and 'limit' are provided and valid numbers.
+ */
 function mwValidPaginationQuery(
     request: Request,
     response: Response,
@@ -38,6 +42,10 @@ function mwValidPaginationQuery(
     }
 }
 
+/**
+ * Middleware to validate ID range query parameters.
+ * Checks if 'startId' and 'endId' are valid numbers and if 'startId' is less than or equal to 'endId'.
+ */
 function mwValidIdQuery(
     request: Request,
     response: Response,
@@ -59,6 +67,10 @@ function mwValidIdQuery(
     }
 }
 
+/**
+ * Middleware to validate the ISBN parameter.
+ * Checks if the provided ISBN is a 13-digit number.
+ */
 function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     const isbn: string = request.params.isbn as string; // Cast to string for validation
     // console.log(isbn);
@@ -72,6 +84,10 @@ function mwValidISBN(request: Request, response: Response, next: NextFunction) {
     }
 }
 
+/**
+ * Middleware to validate the author query parameter.
+ * Checks if the provided author is a valid string.
+ */
 function mwValidAuthor(
     request: Request,
     response: Response,
@@ -424,7 +440,7 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /all/:page/:limit Request to retrieve all books with pagination
+ * @api {get} /all Request to retrieve all books with pagination
  *
  * @apiDescription Retrieves all book entries with optional pagination.
  *
@@ -607,7 +623,7 @@ bookRouter.delete(
 );
 
 /**
- * @api {delete} /delete/:startId/:endId Request to delete multiple books by ID range
+ * @api {delete} /delete Request to delete multiple books by ID range
  *
  * @apiDescription Deletes books with IDs in the specified range.
  *
@@ -655,7 +671,7 @@ bookRouter.delete(
 );
 
 /**
- * @api {put} /ratings/:isbn/:oneStar/:twoStar/:threeStar/:fourStar/:fiveStar Request to update the ratings of an existing book
+ * @api {put} /ratings Request to update the ratings of an existing book
  *
  * @apiDescription Updates a book's ratings
  *
