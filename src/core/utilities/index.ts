@@ -4,4 +4,7 @@ import { validationFunctions } from './validationUtils';
 
 import { credentialingFunctions } from './credentialingUtils';
 
-export { pool, credentialingFunctions, validationFunctions };
+import { connectToDatabase, collections } from './MongoConn';
+
+export { pool, credentialingFunctions, validationFunctions, connectToDatabase, collections };
+

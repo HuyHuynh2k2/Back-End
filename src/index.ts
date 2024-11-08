@@ -4,23 +4,31 @@ import cors from 'cors';
 
 import { routes } from './routes';
 
-const app: Express = express();
+import { connectToDatabase } from './core/utilities';
 
-const PORT: number = parseInt(process.env.PORT) || 4001;
 
-app.use(cors());
+connectToDatabase().then(() => {
+    const app: Express = express();
 
-/*
- * This middleware function parses JSON in the body of POST requests
- */
-app.use(express.json());
+    const PORT: number = parseInt(process.env.PORT) || 4001;
 
-app.use(routes);
+    app.use(cors());
 
-app.get('/', (request: Request, response: Response) => {
-    response.send('<h1>Hello World!</h1>');
-});
+    /*
+    * This middleware function parses JSON in the body of POST requests
+    */
+    app.use(express.json());
 
-app.listen(PORT, () => {
-    return console.log(`Express is listening at http://localhost:${PORT}`);
+    app.use(routes);
+
+    app.get('/', (request: Request, response: Response) => {
+        response.send('<h1>Hello World!</h1>');
+    });
+
+    app.listen(PORT, () => {
+        return console.log(`Express is listening at http://localhost:${PORT}`);
+    });
+}).catch((error) => {
+    console.error(`Failed to connect to database: ${error}`);
+    process.exit(1);
 });

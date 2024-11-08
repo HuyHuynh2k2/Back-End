@@ -9,8 +9,12 @@ import express, {
 } from 'express';
 
 //Access the connection to Postgres Database
-import { pool, validationFunctions } from '../../core/utilities';
+import { pool, validationFunctions, collections} from '../../core/utilities';
 import { Book, Ratings, UrlIcon } from './implements';
+
+
+
+import { ObjectId } from "mongodb";
 
 // Create a new router instance for book-related routes
 const bookRouter: Router = express.Router();
@@ -175,35 +179,54 @@ function mwValidPublication(
  * @apiError (404: Book not found) {String} message "Book not found."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
-bookRouter.get(
+    bookRouter.get(
     '/isbn/:isbn',
     mwValidISBN,
-    (request: Request, response: Response) => {
-        const theQuery = 'SELECT * FROM BOOKS WHERE isbn13 = $1';
-        const values = [request.params.isbn];
+    async(request: Request, response: Response) => {
+        // const theQuery = 'SELECT * FROM BOOKS WHERE isbn13 = $1';
+        // const values = [request.params.isbn];
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount === 1) {
-                    const row = result.rows[0];
-                    const book: Book = createBook(row);
+        // pool.query(theQuery, values)
+        //     .then((result) => {
+        //         if (result.rowCount === 1) {
+        //             const row = result.rows[0];
+        //             const book: Book = createBook(row);
 
-                    response.send({ book });
-                } else {
-                    response.status(404).send({
-                        message: 'Book not found.',
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error('DB Query error on GET book by ISBN');
-                console.error(error);
-                response.status(500).send({
-                    message: 'Server error - contact support team',
-                });
-            });
-    }
-);
+        //             response.send({ book });
+        //         } else {
+        //             response.status(404).send({
+        //                 message: 'Book not found.',
+        //             });
+        //         }
+        //     })
+        //     .catch((error) => {
+        //         console.error('DB Query error on GET book by ISBN');
+        //         console.error(error);
+        //         response.status(500).send({
+        //             message: 'Server error - contact support team',
+        //         });
+        //     });
+
+        try {
+
+            const isbn = Number(request.params.isbn)
+    
+            const filter = {
+                "isbn13": isbn
+              };
+    
+            const books = (await collections.books.find(filter).toArray()) as unknown[];
+    
+            console.log(books);
+            
+            response.status(200).send(books as Book[]);
+        } catch (error) {
+            console.error('DB Query error on GET book by ISBN');
+            console.error(error);
+            response.status(500).send({ message: 'Server error - contact support HUY HUYNH' });
+        }
+    
+    });
 
 /**
  * @api {get} /author/:author Request to retrieve books by author
@@ -223,86 +246,106 @@ bookRouter.get(
  */
 bookRouter.get('/author/:author',
     mwValidAuthor,
-    (request: Request, response: Response) => {
-        const theQuery = 'SELECT * FROM BOOKS WHERE authors = $1';
-        const values = [request.params.author]; // Accessing the author from request.params
+    async(request: Request, response: Response) => {
+        // const theQuery = 'SELECT * FROM BOOKS WHERE authors = $1';
+        // const values = [request.params.author]; // Accessing the author from request.params
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount > 0) {
-                    const rows = result.rows;
-                    const finalResult: Book[] = [];
-                    for (const row of rows) {
-                        const book: Book = createBook(row);
-                        finalResult.push(book);
-                    }
-                    response.send({
-                        books: finalResult,
-                    });
-                } else {
-                    response.status(404).send({
-                        message: 'No books found for this author.',
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error('DB query error on GET books by author');
-                console.error(error);
-                response.status(500).send({
-                    message: 'Server error - contact support team.',
-                });
-            });
+        // pool.query(theQuery, values)
+        //     .then((result) => {
+        //         if (result.rowCount > 0) {
+        //             const rows = result.rows;
+        //             const finalResult: Book[] = [];
+        //             for (const row of rows) {
+        //                 const book: Book = createBook(row);
+        //                 finalResult.push(book);
+        //             }
+        //             response.send({
+        //                 books: finalResult,
+        //             });
+        //         } else {
+        //             response.status(404).send({
+        //                 message: 'No books found for this author.',
+        //             });
+        //         }
+        //     })
+        //     .catch((error) => {
+        //         console.error('DB query error on GET books by author');
+        //         console.error(error);
+        //         response.status(500).send({
+        //             message: 'Server error - contact support team.',
+        //         });
+        //     });
+
+
+        try {
+
+            const author = request.params.author
+    
+            const filter = {
+                "authors": { $regex: author, $options: 'i' } 
+              };
+    
+            const books = (await collections.books.find(filter).toArray()) as unknown[];
+    
+            console.log(books);
+            
+            response.status(200).send(books as Book[]);
+        } catch (error) {
+            console.error('DB Query error on GET book by ISBN');
+            console.error(error);
+            response.status(500).send({ message: 'Server error - contact support HUY HUYNH' });
+        }
     }
 );
 
-/**
- * @api {get} /original_title/:original_title Request to retrieve books by original title
- *
- * @apiDescription Retrieves all book entries with the specified original title.
- *
- * @apiName GetBooksByOriginalTitle
- * @apiGroup Book
- *
- * @apiParam {String} original_title The original title to search for.
- *
- * @apiSuccess {Object[]} books Array of book objects with the specified original title.
- *
- * @apiError (404: No books found) {String} message "No books found with given original title."
- * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
- */
-bookRouter.get('/original_title/:original_title',
-    mwValidOriginalTitle,
-    (request: Request, response: Response) => {
-        const theQuery = 'SELECT * FROM BOOKS WHERE original_title = $1';
-        const values = [request.params.original_title];
+// /**
+//  * @api {get} /original_title/:original_title Request to retrieve books by original title
+//  *
+//  * @apiDescription Retrieves all book entries with the specified original title.
+//  *
+//  * @apiName GetBooksByOriginalTitle
+//  * @apiGroup Book
+//  *
+//  * @apiParam {String} original_title The original title to search for.
+//  *
+//  * @apiSuccess {Object[]} books Array of book objects with the specified original title.
+//  *
+//  * @apiError (404: No books found) {String} message "No books found with given original title."
+//  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+//  */
+// bookRouter.get('/original_title/:original_title',
+//     mwValidOriginalTitle,
+//     (request: Request, response: Response) => {
+//         const theQuery = 'SELECT * FROM BOOKS WHERE original_title = $1';
+//         const values = [request.params.original_title];
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount > 0) {
-                    const rows = result.rows;
-                    const finalResult: Book[] = [];
-                    for (const row of rows) {
-                        const book: Book = createBook(row);
-                        finalResult.push(book);
-                    }
-                    response.send({
-                        books: finalResult,
-                    });
-                } else {
-                    response.status(404).send({
-                        message: 'No books found with given original title.',
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error('DB query error on GET books by original title');
-                console.error(error);
-                response.status(500).send({
-                    message: 'Server error - contact support HUY HUYNH',
-                });
-            });
-    }
-);
+//         pool.query(theQuery, values)
+//             .then((result) => {
+//                 if (result.rowCount > 0) {
+//                     const rows = result.rows;
+//                     const finalResult: Book[] = [];
+//                     for (const row of rows) {
+//                         const book: Book = createBook(row);
+//                         finalResult.push(book);
+//                     }
+//                     response.send({
+//                         books: finalResult,
+//                     });
+//                 } else {
+//                     response.status(404).send({
+//                         message: 'No books found with given original title.',
+//                     });
+//                 }
+//             })
+//             .catch((error) => {
+//                 console.error('DB query error on GET books by original title');
+//                 console.error(error);
+//                 response.status(500).send({
+//                     message: 'Server error - contact support HUY HUYNH',
+//                 });
+//             });
+//     }
+// );
 
 /**
  * @api {get} /average_rating/:rating_avg Request to retrieve books by average rating
@@ -321,40 +364,30 @@ bookRouter.get('/original_title/:original_title',
  */
 bookRouter.get('/average_rating/:rating_avg', 
     mwValidRating,
-    (request: Request, response: Response) => {
+    async(request: Request, response: Response) => {
     const tolerance = 0.005;
     const averageRating = parseFloat(request.params.rating_avg);
     const min = averageRating - tolerance;
     const max = averageRating + tolerance;
 
-    const theQuery = 'SELECT * FROM BOOKS WHERE rating_avg BETWEEN $1 AND $2';
-    const values = [min, max];
+    
+    try {
+        
+        
+        const filter = {
+            "average_rating": { $gte: min, $lte: max }
+        };
 
-    pool.query(theQuery, values)
-        .then((result) => {
-            if (result.rowCount > 0) {
-                const rows = result.rows;
-                const finalResult: Book[] = [];
-                for (const row of rows) {
-                    const book: Book = createBook(row);
-                    finalResult.push(book);
-                }
-                response.send({
-                    book: finalResult,
-                });
-            } else {
-                response.status(404).send({
-                    message: 'No Books found with given rating',
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('BD query error on GET books by ratings');
-            console.log(error);
-            response.status(500).send({
-                message: 'Server error - contact support team',
-            });
-        });
+        const books = (await collections.books.find(filter).toArray()) as unknown[];
+
+        console.log(books);
+        
+        response.status(200).send(books as Book[]);
+    } catch (error) {
+        console.error('DB Query error on GET book by ISBN');
+        console.error(error);
+        response.status(500).send({ message: 'Server error - contact support HUY HUYNH' });
+    }
 });
 
 /**
@@ -376,36 +409,56 @@ bookRouter.get('/average_rating/:rating_avg',
 bookRouter.get(
     '/publication/:publication_year',
     mwValidPublication,
-    (request: Request, response: Response) => {
-        const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
-        const values = [request.params.publication_year];
+    async(request: Request, response: Response) => {
+        // const theQuery = 'SELECT * FROM BOOKS WHERE publication_year = $1';
+        // const values = [request.params.publication_year];
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount > 0) {
-                    const rows = result.rows;
-                    const finalResult: Book[] = [];
+        // pool.query(theQuery, values)
+        //     .then((result) => {
+        //         if (result.rowCount > 0) {
+        //             const rows = result.rows;
+        //             const finalResult: Book[] = [];
 
-                    for (const row of rows) {
-                        const book: Book = createBook(row);
-                        finalResult.push(book);
-                    }
-                    response.send({
-                        book: finalResult,
-                    });
-                } else {
-                    response.status(404).send({
-                        message: 'No books found with given publication',
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error('BD query error on GET books by publication');
-                console.log(error);
-                response.status(500).send({
-                    message: 'Server error - contact support team',
-                });
-            });
+        //             for (const row of rows) {
+        //                 const book: Book = createBook(row);
+        //                 finalResult.push(book);
+        //             }
+        //             response.send({
+        //                 book: finalResult,
+        //             });
+        //         } else {
+        //             response.status(404).send({
+        //                 message: 'No books found with given publication',
+        //             });
+        //         }
+        //     })
+        //     .catch((error) => {
+        //         console.error('BD query error on GET books by publication');
+        //         console.log(error);
+        //         response.status(500).send({
+        //             message: 'Server error - contact support team',
+        //         });
+        //     });
+
+
+
+        try {
+        
+        
+            const filter = {
+                "original_publication_year": Number(request.params.publication_year)
+            };
+    
+            const books = (await collections.books.find(filter).toArray()) as unknown[];
+    
+            console.log(books);
+            
+            response.status(200).send(books as Book[]);
+        } catch (error) {
+            console.error('DB Query error on GET book by ISBN');
+            console.error(error);
+            response.status(500).send({ message: 'Server error - contact support HUY HUYNH' });
+        }
     }
 );
 
@@ -429,35 +482,55 @@ bookRouter.get(
 bookRouter.get(
     '/all/:page/:limit',
     mwValidPaginationQuery,
-    (request: Request, response: Response) => {
+    async(request: Request, response: Response) => {
         const page: number = parseInt(request.params.page, 10);
         const limit: number = parseInt(request.params.limit, 10);
         const offset: number = (page - 1) * limit;
 
-        const theQuery = 'SELECT * FROM BOOKS LIMIT $1 OFFSET $2';
-        const values = [limit, offset];
+        // const theQuery = 'SELECT * FROM BOOKS LIMIT $1 OFFSET $2';
+        // const values = [limit, offset];
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                const rows = result.rows;
-                const finalResult: Book[] = [];
-                for (const row of rows) {
-                    const book: Book = createBook(row);
-                    finalResult.push(book);
-                }
-                response.send({
-                    books: finalResult,
-                });
-            })
-            .catch((error) => {
-                console.error(
-                    'DB query error on GET all books with pagination'
-                );
-                console.error(error);
-                response.status(500).send({
-                    message: 'Server error - contact support.',
-                });
-            });
+        // pool.query(theQuery, values)
+        //     .then((result) => {
+        //         const rows = result.rows;
+        //         const finalResult: Book[] = [];
+        //         for (const row of rows) {
+        //             const book: Book = createBook(row);
+        //             finalResult.push(book);
+        //         }
+        //         response.send({
+        //             books: finalResult,
+        //         });
+        //     })
+        //     .catch((error) => {
+        //         console.error(
+        //             'DB query error on GET all books with pagination'
+        //         );
+        //         console.error(error);
+        //         response.status(500).send({
+        //             message: 'Server error - contact support.',
+        //         });
+        //     });
+
+        try {
+
+            const author = request.params.author
+    
+            
+    
+            const books = (await collections.books.find({})
+            .skip(offset)
+            .limit(limit)
+            .toArray()) as unknown[];
+    
+            console.log(books);
+            
+            response.status(200).send(books as Book[]);
+        } catch (error) {
+            console.error('DB Query error on GET book by ISBN');
+            console.error(error);
+            response.status(500).send({ message: 'Server error - contact support HUY HUYNH' });
+        }
     }
 );
 
@@ -493,12 +566,27 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
         image_small_url,
     } = request.body;
 
-    // Get the current max ID from the database
-    const maxIdResult = await pool.query('SELECT MAX(id) FROM BOOKS');
-    const newId = (maxIdResult.rows[0].max || 0) + 1;
 
-    const values = [
-        newId,
+    class PostBook {
+        constructor(
+            public isbn13: String, authors: string[],
+            originalPublicationYear: number,
+            originalTitle: string,
+            title: string,
+            averageRating: number,
+            ratingsCount: number,  
+            ratings1: number,
+            ratings2: number,
+            ratings3: number,
+            ratings4: number,
+            ratings5: number,
+            imageUrl: String,
+            smallImageUrl: String,
+            ) {}
+    }
+
+
+    const book = new PostBook(
         isbn13,
         authors,
         publication_year,
@@ -513,35 +601,107 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
         rating_5_star,
         image_url,
         image_small_url,
-    ];
-    const query =
-        'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
+    );
+    // const newBook = {
+    //     'isbn13':isbn13,
+    //     'authors':authors,
+    //     'original_publication_year': publication_year,
+    //     'original_title': original_title,
+    //     'title': title,
+    //     'average_rating':rating_avg,
+    //     'ratings_count':rating_count,
+    //     'ratings_1':rating_1_star,
+    //     'ratings_2':rating_2_star,
+    //     'ratings_3':rating_3_star,
+    //     'ratings_4':rating_4_star,
+    //     'ratings_5':rating_5_star,
+    //     'image_url':image_url, 
+    //     'small_image_url':image_small_url
+    // };
 
-    pool.query(query, values)
-        .then((result) => {
-            const book: Book = createBook(result.rows[0]);
-            response.status(201).send({
-                entry: book,
-            });
-        })
-        .catch((error) => {
-            if (
-                error.detail != undefined &&
-                (error.detail as string).endsWith('already exists.')
-            ) {
-                console.error('Book exists');
-                response.status(400).send({
-                    message: 'Book exists',
-                });
-            } else {
-                //log the error
-                console.error('DB Query error on POST');
-                console.error(error);
-                response.status(500).send({
-                    message: 'server error - contact support',
-                });
-            }
+    const newBook = {
+        'book_id': 2000,
+        'isbn13': '9781234567890', // Random valid ISBN-13
+        'authors': ['John Doe', 'Jane Smith'], // Random author names
+        'original_publication_year': 2005, // Random valid year
+        'original_title': 'Random Title', // Random title
+        'title': 'Random Book Title', // Random book title
+        'average_rating': 4.2, // Random average rating
+        'ratings_count': 1234, // Random ratings count
+        'ratings_1': 10, // Random 1-star ratings count
+        'ratings_2': 20, // Random 2-star ratings count
+        'ratings_3': 30, // Random 3-star ratings count
+        'ratings_4': 40, // Random 4-star ratings count
+        'ratings_5': 50, // Random 5-star ratings count
+        'image_url': 'http://example.com/image.jpg', // Random image URL
+        'small_image_url': 'http://example.com/small_image.jpg' // Random small image URL
+    };
+
+
+    
+
+    try {
+        const resp = await collections.books.insertOne(newBook);
+
+        response.status(201).send({
+            entry: resp,});
+
+    } catch (error) {
+        console.error('DB Query error on POST');
+        console.error(error);
+        response.status(500).send({
+            message: 'Server error - contact support',
         });
+    }
+    // // Get the current max ID from the database
+    // const maxIdResult = await pool.query('SELECT MAX(id) FROM BOOKS');
+    // const newId = (maxIdResult.rows[0].max || 0) + 1;
+
+    // const values = [
+    //     newId,
+    //     isbn13,
+    //     authors,
+    //     publication_year,
+    //     original_title,
+    //     title,
+    //     rating_avg,
+    //     rating_count,
+    //     rating_1_star,
+    //     rating_2_star,
+    //     rating_3_star,
+    //     rating_4_star,
+    //     rating_5_star,
+    //     image_url,
+    //     image_small_url,
+    // ];
+    // const query =
+    //     'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
+
+    // pool.query(query, values)
+    //     .then((result) => {
+    //         const book: Book = createBook(result.rows[0]);
+    //         response.status(201).send({
+    //             entry: book,
+    //         });
+    //     })
+    //     .catch((error) => {
+    //         if (
+    //             error.detail != undefined &&
+    //             (error.detail as string).endsWith('already exists.')
+    //         ) {
+    //             console.error('Book exists');
+    //             response.status(400).send({
+    //                 message: 'Book exists',
+    //             });
+    //         } else {
+    //             //log the error
+    //             console.error('DB Query error on POST');
+    //             console.error(error);
+    //             response.status(500).send({
+    //                 message: 'server error - contact support',
+    //             });
+    //         }
+        // });
 });
 
 /**
