@@ -2,10 +2,10 @@ import express, { Router } from 'express';
 
 import { checkToken } from '../../core/middleware';
 import { tokenTestRouter } from './tokenTest';
-import { openRoutes } from '../open';
+import { bookRouter } from './books';
 
 const closedRoutes: Router = express.Router();
 
-closedRoutes.use('/c', checkToken, openRoutes);
+closedRoutes.use('/c/books', checkToken, tokenTestRouter, bookRouter);
 
 export { closedRoutes };

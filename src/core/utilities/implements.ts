@@ -1,4 +1,4 @@
-import { IBook, IRatings, IUrlIcon } from '../../core/models';
+import { IBook, IRatings, IUrlIcon } from '../models';
 
 class Book implements IBook {
     isbn13: number;
