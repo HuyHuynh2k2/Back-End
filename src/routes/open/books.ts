@@ -314,7 +314,7 @@ bookRouter.get(
  * @apiName GetBooksByRating
  * @apiGroup Book
  *
- * @apiParam {Number} rating The average rating to search for.
+ * @apiParam {Number} rating_avg The average rating to search for.
  *
  * @apiSuccess {Object[]} books Array of book objects with the specified average rating.
  *
@@ -370,7 +370,7 @@ bookRouter.get(
  * @apiName GetBooksByPublicationYear
  * @apiGroup Book
  *
- * @apiParam {Number} publicationYear The publication year to search for.
+ * @apiParam {Number} publication_year The publication year to search for.
  *
  * @apiSuccess {Object[]} books Array of book objects published in the specified year.
  *
