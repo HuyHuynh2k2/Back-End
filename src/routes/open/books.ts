@@ -120,6 +120,31 @@ function mwValidRating(
     }
 }
 
+function mwValidRatings(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const oneStar: number = +request.params.oneStar;
+    const twoStar: number = +request.params.twoStar;
+    const threeStar: number = +request.params.threeStar;
+    const fourStar: number = +request.params.fourStar;
+    const fiveStar: number = +request.params.fiveStar;
+
+    if (
+        !isNumberProvided(oneStar) ||
+        !isNumberProvided(twoStar) ||
+        !isNumberProvided(threeStar) ||
+        !isNumberProvided(fourStar) ||
+        !isNumberProvided(fiveStar)
+    ) {
+        response.status(400).send({
+            message: 'Invalid Ratings',
+        });
+    }
+    next();
+}
+
 function mwValidOriginalTitle(
     request: Request,
     response: Response,
@@ -645,9 +670,10 @@ bookRouter.delete(
     }
 );
 
-bookRouter.put( 
+bookRouter.put(
     '/ratings/:isbn/:oneStar/:twoStar/:threeStar/:fourStar/:fiveStar',
     mwValidISBN,
+    mwValidRatings,
     async (request: Request, response: Response) => {
         const isbn = request.params.isbn;
         const oneStar: number = +request.params.oneStar;
@@ -655,12 +681,28 @@ bookRouter.put(
         const threeStar: number = +request.params.threeStar;
         const fourStar: number = +request.params.fourStar;
         const fiveStar: number = +request.params.fiveStar;
-        const ratingCount = oneStar + twoStar + threeStar + fourStar + fiveStar
-        const ratingAvg: number = Math.floor((oneStar + twoStar * 2 + threeStar * 3 + fourStar * 4 + fiveStar * 5) / ratingCount)
+        const ratingCount = oneStar + twoStar + threeStar + fourStar + fiveStar;
+        const ratingAvg: number = Math.floor(
+            (oneStar +
+                twoStar * 2 +
+                threeStar * 3 +
+                fourStar * 4 +
+                fiveStar * 5) /
+                ratingCount
+        );
 
         const query =
             'UPDATE BOOKS SET rating_1_star = rating_1_star + $1, rating_2_star = rating_2_star + $2, rating_3_star = rating_3_star + $3, rating_4_star = rating_4_star + $4, rating_5_star = rating_5_star + $5, rating_count = rating_count + $6 , rating_avg = (rating_avg + $7) / 2   WHERE BOOKS.isbn13 = $8 RETURNING *';
-        const values = [oneStar, twoStar, threeStar, fourStar, fiveStar, ratingCount, ratingAvg, isbn];
+        const values = [
+            oneStar,
+            twoStar,
+            threeStar,
+            fourStar,
+            fiveStar,
+            ratingCount,
+            ratingAvg,
+            isbn,
+        ];
 
         pool.query(query, values)
             .then((result) => {
