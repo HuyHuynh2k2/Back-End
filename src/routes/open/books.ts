@@ -32,8 +32,8 @@ function mwValidPaginationQuery(
     response: Response,
     next: NextFunction
 ) {
-    const page: string = request.query.page as string;
-    const limit: string = request.query.limit as string;
+    const page: string = request.params.page as string;
+    const limit: string = request.params.limit as string;
 
     if (isNumberProvided(page) && isNumberProvided(limit)) {
         next();
@@ -217,9 +217,29 @@ function mwValidPublication(
     
             const books = (await collections.books.find(filter).toArray()) as unknown[];
     
-            console.log(books);
-            
-            response.status(200).send(books as Book[]);
+            const mappedBooks: Book[] = books.map((book: any) => ({
+                isbn13: book.isbn13,
+                authors: book.authors,
+                publication: book.original_publication_year,
+                original_title: book.original_title,
+                title: book.title,
+                ratings: {
+                    average: book.average_rating,
+                    count: book.ratings_count,
+                    rating_1: book.ratings_1,
+                    rating_2: book.ratings_2,
+                    rating_3: book.ratings_3,
+                    rating_4: book.ratings_4,
+                    rating_5: book.ratings_5,
+                },
+                icons: {
+                    large: book.image_url,
+                    small: book.small_image_url,
+                }
+            }));
+        
+            response.status(200).send(mappedBooks);
+
         } catch (error) {
             console.error('DB Query error on GET book by ISBN');
             console.error(error);
@@ -289,7 +309,32 @@ bookRouter.get('/author/:author',
     
             console.log(books);
             
-            response.status(200).send(books as Book[]);
+            // response.status(200).send(books as Book[]);
+
+
+            const mappedBooks: Book[] = books.map((book: any) => ({
+                isbn13: book.isbn13,
+                authors: book.authors,
+                publication: book.original_publication_year,
+                original_title: book.original_title,
+                title: book.title,
+                ratings: {
+                    average: book.average_rating,
+                    count: book.ratings_count,
+                    rating_1: book.ratings_1,
+                    rating_2: book.ratings_2,
+                    rating_3: book.ratings_3,
+                    rating_4: book.ratings_4,
+                    rating_5: book.ratings_5,
+                },
+                icons: {
+                    large: book.image_url,
+                    small: book.small_image_url,
+                }
+            }));
+        
+            response.status(200).send(mappedBooks);
+
         } catch (error) {
             console.error('DB Query error on GET book by ISBN');
             console.error(error);
@@ -381,8 +426,29 @@ bookRouter.get('/average_rating/:rating_avg',
         const books = (await collections.books.find(filter).toArray()) as unknown[];
 
         console.log(books);
-        
-        response.status(200).send(books as Book[]);
+        const mappedBooks: Book[] = books.map((book: any) => ({
+            isbn13: book.isbn13,
+            authors: book.authors,
+            publication: book.original_publication_year,
+            original_title: book.original_title,
+            title: book.title,
+            ratings: {
+                average: book.average_rating,
+                count: book.ratings_count,
+                rating_1: book.ratings_1,
+                rating_2: book.ratings_2,
+                rating_3: book.ratings_3,
+                rating_4: book.ratings_4,
+                rating_5: book.ratings_5,
+            },
+            icons: {
+                large: book.image_url,
+                small: book.small_image_url,
+            }
+        }));
+    
+        response.status(200).send(mappedBooks);
+
     } catch (error) {
         console.error('DB Query error on GET book by ISBN');
         console.error(error);
@@ -451,9 +517,29 @@ bookRouter.get(
     
             const books = (await collections.books.find(filter).toArray()) as unknown[];
     
-            console.log(books);
-            
-            response.status(200).send(books as Book[]);
+            const mappedBooks: Book[] = books.map((book: any) => ({
+                isbn13: book.isbn13,
+                authors: book.authors,
+                publication: book.original_publication_year,
+                original_title: book.original_title,
+                title: book.title,
+                ratings: {
+                    average: book.average_rating,
+                    count: book.ratings_count,
+                    rating_1: book.ratings_1,
+                    rating_2: book.ratings_2,
+                    rating_3: book.ratings_3,
+                    rating_4: book.ratings_4,
+                    rating_5: book.ratings_5,
+                },
+                icons: {
+                    large: book.image_url,
+                    small: book.small_image_url,
+                }
+            }));
+        
+            response.status(200).send(mappedBooks);
+
         } catch (error) {
             console.error('DB Query error on GET book by ISBN');
             console.error(error);
@@ -523,9 +609,29 @@ bookRouter.get(
             .limit(limit)
             .toArray()) as unknown[];
     
-            console.log(books);
-            
-            response.status(200).send(books as Book[]);
+            const mappedBooks: Book[] = books.map((book: any) => ({
+                isbn13: book.isbn13,
+                authors: book.authors,
+                publication: book.original_publication_year,
+                original_title: book.original_title,
+                title: book.title,
+                ratings: {
+                    average: book.average_rating,
+                    count: book.ratings_count,
+                    rating_1: book.ratings_1,
+                    rating_2: book.ratings_2,
+                    rating_3: book.ratings_3,
+                    rating_4: book.ratings_4,
+                    rating_5: book.ratings_5,
+                },
+                icons: {
+                    large: book.image_url,
+                    small: book.small_image_url,
+                }
+            }));
+        
+            response.status(200).send(mappedBooks);
+
         } catch (error) {
             console.error('DB Query error on GET book by ISBN');
             console.error(error);
@@ -550,6 +656,7 @@ bookRouter.get(
  */
 bookRouter.post('/book', async (request: Request, response: Response) => {
     const {
+        bookId,
         isbn13,
         authors,
         publication_year,
@@ -566,10 +673,12 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
         image_small_url,
     } = request.body;
 
+    console.log(request.body);
+
 
     class PostBook {
-        constructor(
-            public isbn13: String, authors: string[],
+        constructor( public bookId: number,
+            public isbn13: number, public authors: string,
             originalPublicationYear: number,
             originalTitle: string,
             title: string,
@@ -587,9 +696,10 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
 
 
     const book = new PostBook(
-        isbn13,
+        Number(bookId),
+        Number(isbn13),
         authors,
-        publication_year,
+        Number(publication_year),
         original_title,
         title,
         rating_avg,
@@ -602,6 +712,7 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
         image_url,
         image_small_url,
     );
+
     // const newBook = {
     //     'isbn13':isbn13,
     //     'authors':authors,
@@ -620,28 +731,29 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
     // };
 
     const newBook = {
-        'book_id': 2000,
-        'isbn13': '9781234567890', // Random valid ISBN-13
-        'authors': ['John Doe', 'Jane Smith'], // Random author names
-        'original_publication_year': 2005, // Random valid year
-        'original_title': 'Random Title', // Random title
-        'title': 'Random Book Title', // Random book title
-        'average_rating': 4.2, // Random average rating
-        'ratings_count': 1234, // Random ratings count
-        'ratings_1': 10, // Random 1-star ratings count
-        'ratings_2': 20, // Random 2-star ratings count
-        'ratings_3': 30, // Random 3-star ratings count
-        'ratings_4': 40, // Random 4-star ratings count
-        'ratings_5': 50, // Random 5-star ratings count
-        'image_url': 'http://example.com/image.jpg', // Random image URL
-        'small_image_url': 'http://example.com/small_image.jpg' // Random small image URL
+        'book_id': Number(bookId),
+        'isbn13': Number(isbn13), // Random valid ISBN-13
+        'authors': authors, // Random author names
+        'original_publication_year': Number(publication_year), // Random valid year
+        'original_title': original_title, // Random title
+        'title': title, // Random book title
+        'average_rating': Number(rating_avg), // Random average rating
+        'ratings_count': Number(rating_count), // Random ratings count
+        'ratings_1': Number(rating_1_star), // Random 1-star ratings count
+        'ratings_2': Number(rating_1_star), // Random 2-star ratings count
+        'ratings_3': Number(rating_1_star), // Random 3-star ratings count
+        'ratings_4': Number(rating_1_star), // Random 4-star ratings count
+        'ratings_5': Number(rating_1_star), // Random 5-star ratings count
+        'image_url': image_url, // Random image URL
+        'small_image_url': image_small_url // Random small image URL
     };
 
+    console.log(book);
 
     
 
     try {
-        const resp = await collections.books.insertOne(newBook);
+        const resp = await collections.books.insertOne(book);
 
         response.status(201).send({
             entry: resp,});
@@ -723,32 +835,49 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
 bookRouter.delete(
     '/isbn/:isbn',
     mwValidISBN,
-    (request: Request, response: Response) => {
+    async(request: Request, response: Response) => {
         const isbn: string = request.params.isbn;
-        const value = [isbn];
-        const query = 'DELETE FROM BOOKS WHERE isbn13 = 1$ RETURNING *';
+        // const value = [isbn];
+        // const query = 'DELETE FROM BOOKS WHERE isbn13 = 1$ RETURNING *';
 
-        pool.query(query, value)
-            .then((result) => {
-                if (result.rowCount > 0) {
-                    const book: Book = createBook(result.rows[0]);
-                    response.send({
-                        entries: book,
-                    });
-                } else {
-                    response.status(404).send({
-                        message: `No Book with ${isbn} found`,
-                    });
-                }
-            })
-            .catch((error) => {
-                //log the error
-                console.error('DB Query error on DELETE by isbn');
-                console.error(error);
-                response.status(500).send({
-                    message: 'server error - contact support',
-                });
+        // pool.query(query, value)
+        //     .then((result) => {
+        //         if (result.rowCount > 0) {
+        //             const book: Book = createBook(result.rows[0]);
+        //             response.send({
+        //                 entries: book,
+        //             });
+        //         } else {
+        //             response.status(404).send({
+        //                 message: `No Book with ${isbn} found`,
+        //             });
+        //         }
+        //     })
+        //     .catch((error) => {
+        //         //log the error
+        //         console.error('DB Query error on DELETE by isbn');
+        //         console.error(error);
+        //         response.status(500).send({
+        //             message: 'server error - contact support',
+        //         });
+        //     });
+
+
+        try {
+            const resp = await collections.books.deleteOne({ "isbn13": Number(isbn) });
+    
+            response.status(201).send({
+                entry: resp,});
+    
+        } catch (error) {
+            console.error('DB Query error on POST');
+            console.error(error);
+            response.status(500).send({
+                message: 'Server error - contact support',
             });
+        }
+
+
     }
 );
 
@@ -775,28 +904,43 @@ bookRouter.delete(
         const startId = request.query.startId as string;
         const endId = request.query.endId as string;
 
-        const theQuery = 'DELETE FROM BOOKS WHERE id BETWEEN $1 AND $2';
-        const values = [startId, endId];
+        // const theQuery = 'DELETE FROM BOOKS WHERE id BETWEEN $1 AND $2';
+        // const values = [startId, endId];
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount > 0) {
-                    response.status(200).send({
-                        message: `Deleted ${result.rowCount} books from ID ${startId} to ${endId}.`,
-                    });
-                } else {
-                    response.status(404).send({
-                        message: 'No books found in the specified range.',
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error('DB Query error on DELETE');
-                console.error(error);
-                response.status(500).send({
-                    message: 'Server error - contact support.',
-                });
+        // pool.query(theQuery, values)
+        //     .then((result) => {
+        //         if (result.rowCount > 0) {
+        //             response.status(200).send({
+        //                 message: `Deleted ${result.rowCount} books from ID ${startId} to ${endId}.`,
+        //             });
+        //         } else {
+        //             response.status(404).send({
+        //                 message: 'No books found in the specified range.',
+        //             });
+        //         }
+        //     })
+        //     .catch((error) => {
+        //         console.error('DB Query error on DELETE');
+        //         console.error(error);
+        //         response.status(500).send({
+        //             message: 'Server error - contact support.',
+        //         });
+        //     });
+
+        try {
+            const resp = await collections.books.deleteMany({ "book_id": { $gte: Number(startId), $lte: Number(endId) } });
+    
+            response.status(201).send({
+                entry: resp,});
+    
+        } catch (error) {
+            console.error('DB Query error on POST');
+            console.error(error);
+            response.status(500).send({
+                message: 'Server error - contact support',
             });
+        }
+
     }
 );
 
