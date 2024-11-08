@@ -15,17 +15,8 @@ CREATE TABLE Account (Account_ID SERIAL PRIMARY KEY,
                       Account_Role int NOT NULL
 );
 
-
-CREATE TABLE Account_Credential (Credential_ID SERIAL PRIMARY KEY,
-                      Account_ID INT NOT NULL,
-                      Salted_Hash VARCHAR(255) NOT NULL,
-                      salt VARCHAR(255),
-                      FOREIGN KEY(Account_ID) REFERENCES Account(Account_ID)
-);
-
 CREATE TABLE BOOKS (id INT PRIMARY KEY,
         isbn13 BIGINT,
-        authors TEXT,
         publication_year INT,
         original_title TEXT,
         title TEXT,
@@ -40,7 +31,29 @@ CREATE TABLE BOOKS (id INT PRIMARY KEY,
         image_small_url TEXT
     );
 
+CREATE TABLE Authors (
+    Author_ID TEXT PRIMARY KEY,
+    Author TEXT
+);
+
+CREATE TABLE BookAuthors (
+    isbn INT,
+    Author_ID TEXT,
+    FOREIGN KEY (BookID) REFERENCES Books(isbn13) ON DELETE CASCADE,
+	FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID) ON DELETE CASCADE
+);
+
 COPY books
 FROM '/docker-entrypoint-initdb.d/books.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY Authors
+FROM '/docker-entrypoint-initdb.d/Authors.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY BookAuthors
+FROM '/docker-entrypoint-initdb.d/BookAuthors.csv'
 DELIMITER ','
 CSV HEADER;

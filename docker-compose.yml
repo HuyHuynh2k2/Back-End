@@ -31,4 +31,6 @@ services:
         volumes:
             - ~/apps/postgres:/var/lib/postgresql/data
             - ./data/books.csv:/docker-entrypoint-initdb.d/books.csv
+            - ./data/Authors.csv:/docker-entrypoint-initdb.d/Authors.csv
+            - ./data/BookAuthors.csv:/docker-entrypoint-initdb.d/BookAuthors.csv
             - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
