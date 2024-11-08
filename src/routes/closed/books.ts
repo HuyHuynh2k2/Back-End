@@ -634,7 +634,7 @@ bookRouter.delete(
     (request: Request, response: Response) => {
         const isbn: string = request.params.isbn;
         const value = [isbn];
-        const query = 'DELETE FROM BOOKS WHERE isbn13 = 1$ RETURNING *';
+        const query = 'DELETE FROM BOOKS WHERE isbn13 = $1 RETURNING *';
 
         pool.query(query, value)
             .then((result) => {
@@ -645,16 +645,14 @@ bookRouter.delete(
                     });
                 } else {
                     response.status(404).send({
-                        message: `No Book with ${isbn} found`,
+                        message: `No book with ISBN ${isbn} found`,
                     });
                 }
             })
             .catch((error) => {
-                //log the error
-                console.error('DB Query error on DELETE by isbn');
-                console.error(error);
+                console.error('DB Query error on DELETE by ISBN:', error);
                 response.status(500).send({
-                    message: 'server error - contact support',
+                    message: 'Server error - contact support',
                 });
             });
     }
