@@ -162,17 +162,18 @@ function mwValidPublication(
 }
 
 /**
- * @api {get} /isbn/:isbn Request to retrieve a book by ISBN
+ * @api {get} /c/books/isbn/:isbn Request to retrieve a book by ISBN
  *
  * @apiDescription Retrieves a book entry based on the provided ISBN number.
  *
  * @apiName GetBookByISBN
  * @apiGroup Book
  *
- * @apiParam {String} isbn The ISBN of the book to retrieve (13-digit number).
+ * @apiParam {Number} isbn The ISBN of the book to retrieve (13-digit number).
+ * @apiHeader {String} authorization The access token of the user.
  *
  * @apiSuccess {Object} book The book object containing all details of the book.
- * @apiSuccess {String} book.isbn13 The ISBN of the book.
+ * @apiSuccess {Number} book.isbn13 The ISBN of the book.
  * @apiSuccess {String} book.authors The authors of the book.
  * @apiSuccess {Number} book.publication_year The year the book was published.
  * @apiSuccess {String} book.original_title The original title of the book.
@@ -182,7 +183,11 @@ function mwValidPublication(
  *
  * @apiError (400: Invalid ISBN) {String} message "Invalid or missing ISBN parameter - please provide a 13-digit number."
  * @apiError (404: Book not found) {String} message "Book not found."
- * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
+ * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
 bookRouter.get(
     '/isbn/:isbn',
@@ -215,7 +220,7 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /author/:author Request to retrieve books by author
+ * @api {get} /c/books/author/:author Request to retrieve books by author
  *
  * @apiDescription Retrieves all book entries for a specified author.
  *
@@ -223,11 +228,16 @@ bookRouter.get(
  * @apiGroup Book
  *
  * @apiParam {String} author The author to retrieve books for.
+ * @apiHeader {String} authorization The access token of the user.
  *
  * @apiSuccess {Object[]} books Array of book objects by the specified author.
  *
  * @apiError (400: Invalid Author) {String} message "Invalid Author."
  * @apiError (404: No books found) {String} message "No books found for this author."
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
 bookRouter.get(
@@ -266,7 +276,7 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /original_title/:original_title Request to retrieve books by original title
+ * @api {get} /c/books/original_title/:original_title Request to retrieve books by original title
  *
  * @apiDescription Retrieves all book entries with the specified original title.
  *
@@ -274,9 +284,14 @@ bookRouter.get(
  * @apiGroup Book
  *
  * @apiParam {String} original_title The original title to search for.
- *
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {Object[]} books Array of book objects with the specified original title.
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (404: No books found) {String} message "No books found with given original title."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
@@ -316,7 +331,7 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /average_rating/:rating_avg Request to retrieve books by average rating
+ * @api {get} /c/books/average_rating/:rating_avg Request to retrieve books by average rating
  *
  * @apiDescription Retrieves all book entries with an average rating within a certain tolerance.
  *
@@ -324,9 +339,14 @@ bookRouter.get(
  * @apiGroup Book
  *
  * @apiParam {Number} rating_avg The average rating to search for.
- *
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {Object[]} books Array of book objects with the specified average rating.
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (404: No books found) {String} message "No Books found with given rating."
  * @apiError (500: Server error) {String} message "Server error - contact support team."
  */
@@ -372,7 +392,7 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /publication_year/:publication_year Request to retrieve books by publication year
+ * @api {get} /c/books/publication_year/:publication_year Request to retrieve books by publication year
  *
  * @apiDescription Retrieves all book entries published in the specified year.
  *
@@ -380,9 +400,14 @@ bookRouter.get(
  * @apiGroup Book
  *
  * @apiParam {Number} publication_year The publication year to search for.
- *
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {Object[]} books Array of book objects published in the specified year.
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (400: Bad Request) {string} message "Invalid Year"
  * @apiError (404: No books found) {String} message "No books found with given publication"
  * @apiError (500: Server error) {String} message "Server error - contact support team"
@@ -424,18 +449,23 @@ bookRouter.get(
 );
 
 /**
- * @api {get} /all/:page/:limit Request to retrieve all books with pagination
+ * @api {get} /c/books/all/:page/:limit Request to retrieve all books with pagination
  *
  * @apiDescription Retrieves all book entries with optional pagination.
  *
  * @apiName GetAllBooks
  * @apiGroup Book
  *
- * @apiQuery {Number} page The page number to retrieve.
- * @apiQuery {Number} limit The number of entries per page.
- *
+ * @apiParam {Number} page The page number to retrieve.
+ * @apiParam {Number} limit The number of entries per page.
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {Object[]} books Array of book objects for the specified page.
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (400: Invalid Pagination) {String} message "Invalid or missing pagination parameters - please refer to documentation."
  * @apiError (500: Server error) {String} message "Server error - contact support HUY HUYNH."
  */
@@ -476,16 +506,35 @@ bookRouter.get(
 );
 
 /**
- * @api {post} /book Request to add a new book
+ * @api {post} /c/books/book Request to add a new book
  *
  * @apiDescription Adds a new book entry to the database.
  *
  * @apiName AddBook
  * @apiGroup Book
  *
- *
+ * @apiHeader {String} authorization The access token of the user.
+ * 
+ * @apiBody {Number} isbn13 the book's isbn
+ * @apiBody {String} authors the book's author
+ * @apiBody {Number} publication_year the book's publication year
+ * @apiBody {String} original_title the book's original_title
+ * @apiBody {String} title the book's title
+ * @apiBody {Number} rating_avg the book's average rating
+ * @apiBody {Number} rating_1_star the book's number of 1-star ratings
+ * @apiBody {Number} rating_2_star the book's number of 2-star ratings
+ * @apiBody {Number} rating_3_star the book's number of 3-star ratings
+ * @apiBody {Number} rating_4_star the book's number of 4-star ratings
+ * @apiBody {Number} rating_5_star the book's number of 5-star ratings
+ * @apiBody {Object} image_url the book's image url
+ * @apiBody {Object} image_small_url the book's small image url
+
  * @apiSuccess {Object} entry The book object that was added.
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (400: Book exists) {String} message "Book exists."
  * @apiError (500: Server error) {String} message "Server error - contact support."
  */
@@ -559,7 +608,7 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
 });
 
 /**
- * @api {delete} /isbn/:isbn Request to delete a book by ISBN
+ * @api {delete} /c/books/isbn/:isbn Request to delete a book by ISBN
  *
  * @apiDescription Deletes a book entry based on the provided ISBN number.
  *
@@ -567,9 +616,14 @@ bookRouter.post('/book', async (request: Request, response: Response) => {
  * @apiGroup Book
  *
  * @apiParam {String} isbn The ISBN of the book to delete (13-digit number).
- *
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {Object} entries The deleted book object.
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (400: Invalid ISBN) {String} message "Invalid or missing ISBN parameter - please provide a 13-digit number."
  * @apiError (404: No Book found) {String} message "No Book with {isbn} found."
  * @apiError (500: Server error) {String} message "Server error - contact support."
@@ -607,7 +661,7 @@ bookRouter.delete(
 );
 
 /**
- * @api {delete} /delete/:startId/:endId Request to delete multiple books by ID range
+ * @api {delete} /c/books/delete/:startId/:endId Request to delete multiple books by ID range
  *
  * @apiDescription Deletes books with IDs in the specified range.
  *
@@ -616,9 +670,14 @@ bookRouter.delete(
  *
  * @apiParam {Number} startId The starting ID of the range.
  * @apiParam {Number} endId The ending ID of the range.
- *
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {String} message "Deleted {number} books from ID {startId} to {endId}."
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (404: No books found) {String} message "No books found in the specified range."
  * @apiError (500: Server error) {String} message "Server error - contact support."
  */
@@ -655,7 +714,7 @@ bookRouter.delete(
 );
 
 /**
- * @api {put} /ratings/:isbn/:oneStar/:twoStar/:threeStar/:fourStar/:fiveStar Request to update the ratings of an existing book
+ * @api {put} /c/books/ratings/:isbn/:oneStar/:twoStar/:threeStar/:fourStar/:fiveStar Request to update the ratings of an existing book
  *
  * @apiDescription Updates a book's ratings
  *
@@ -668,9 +727,14 @@ bookRouter.delete(
  * @apiParam {Number} threeStar The number of three stars in the book.
  * @apiParam {Number} fourStar The number of four stars in the book.
  * @apiParam {Number} fiveStar The number of five stars in the book.
- *
+ * @apiHeader {String} authorization The access token of the user.
+
  * @apiSuccess {String} message "Updated books {book title}."
- *
+
+ * @apiError (401: Token not supplied) {String} success "false"
+ * @apiError (401: Token not supplied) {String} message "Auth token is not supplied"
+ * @apiError (403: Invalid token) {String} success "false"
+ * @apiError (403: Invalid token) {String} message "Token is not valid"
  * @apiError (404: No book found) {String} message "No book found."
  * @apiError (500: Server error) {String} message "Server error - contact support."
  */
