@@ -26,8 +26,8 @@ export interface IUserRequest extends Request {
 
 // A valid password additionally must have at least 1 numeric and special character
 export const isValidPassword = (password: string): boolean => {
-    const hasNumber: RegExp = /\d/;            // Checks for at least one digit
-    const hasSpecialChar: RegExp = /[!@#$%^&*(),.?":{}|<>]/;  // Checks for at least one special character
+    const hasNumber: RegExp = /\d/; // Checks for at least one digit
+    const hasSpecialChar: RegExp = /[!@#$%^&*(),.?":{}|<>]/; // Checks for at least one special character
 
     return (
         isStringProvided(password) &&
@@ -39,9 +39,7 @@ export const isValidPassword = (password: string): boolean => {
 
 // A valid phone number additionally must not exceed 15 digits in length
 const isValidPhone = (phone: string): boolean =>
-    isNumberProvided(phone) && 
-    phone.length >= 10 && 
-    phone.length <= 15;
+    isNumberProvided(phone) && phone.length >= 10 && phone.length <= 15;
 
 // Add more/your own role validation here. The *rules* must be documented
 // and the client-side validation should match these rules.
@@ -59,14 +57,14 @@ export const isValidEmail = (email: string): boolean =>
  * @api {post} /register Request to register a user
  * @apiName PostRegister
  * @apiGroup Auth
- * 
- * @apiDescription 
+ *
+ * @apiDescription
  * - **Password**: Must be a non-empty string containing at least 1 numerical and 1 special character.
  * - **Phone number**: Must be a non-empty series of numbers, with a length between 10 and 15 digits.
  * - **Email**: Must be a non-empty string that includes the '@' character.
  * - **Role**: Must be a number with a value between 1 and 5.
  * - **First & Last Name**: Must be non-empty strings.
- * 
+ *
  * @apiBody {String} firstname a users first name
  * @apiBody {String} lastname a users last name
  * @apiBody {String} email a users email *unique
@@ -217,22 +215,21 @@ registerRouter.post(
             .catch((error) => {
                 //remove the user from the member table based on their account id
                 //in case an errors occures when inserting the password
-                const deletePasswordQuery = 
-                    "DELETE FROM Account WHERE account_ID = $1";
+                const deletePasswordQuery =
+                    'DELETE FROM Account WHERE account_ID = $1';
                 const deleteValues = [request.id];
-                pool.query(deletePasswordQuery, deleteValues)
-                    .then((result) => {
-                        if (result.rowCount > 0) {
-                            response.status(200).send({
-                                message: `Deleted ${request.id} from ID.`,
-                            });
-                        } else {
-                            response.status(404).send({
-                                message: `No ${request.id} was found.`,
-                            });
-                        }
-                    });
-                
+                pool.query(deletePasswordQuery, deleteValues).then((result) => {
+                    if (result.rowCount > 0) {
+                        response.status(200).send({
+                            message: `Deleted ${request.id} from ID.`,
+                        });
+                    } else {
+                        response.status(404).send({
+                            message: `No ${request.id} was found.`,
+                        });
+                    }
+                });
+
                 //log the error
                 console.error('DB Query error on register');
                 console.error(error);

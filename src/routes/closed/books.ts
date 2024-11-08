@@ -485,7 +485,7 @@ bookRouter.get(
  *
  *
  * @apiSuccess {Object} entry The book object that was added.
- *
+ * yeah tested before
  * @apiError (400: Book exists) {String} message "Book exists."
  * @apiError (500: Server error) {String} message "Server error - contact support."
  */
