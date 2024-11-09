@@ -1,0 +1,2137 @@
+{
+	"info": {
+		"_postman_id": "40fc5772-d9ea-46d3-8234-f0038b0d48ed",
+		"name": "GroupTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38972372",
+		"_collection_link": "https://backend-team-6926.postman.co/workspace/Backend-Team-Workspace~53abd9e8-df2d-4439-8cb4-a66336331465/collection/38972372-40fc5772-d9ea-46d3-8234-f0038b0d48ed?action=share&source=collection_link&creator=38972372"
+	},
+	"item": [
+		{
+			"name": "Test_GET_isbn",
+			"item": [
+				{
+					"name": "localhost:4000/c/books/isbn/9780439023480",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response includes specified elements\", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.be.an(\"array\").that.is.not.empty;",
+									"    ",
+									"    const book = body[0];",
+									"    ",
+									"    pm.expect(book).to.have.property(\"isbn13\").that.is.a(\"number\");",
+									"    pm.expect(book).to.have.property(\"authors\").that.is.a(\"string\");",
+									"    pm.expect(book).to.have.property(\"publication\").that.is.a(\"number\");",
+									"    pm.expect(book).to.have.property(\"original_title\").that.is.a(\"string\");",
+									"    pm.expect(book).to.have.property(\"title\").that.is.a(\"string\");",
+									"    ",
+									"    pm.expect(book).to.have.property(\"ratings\").that.is.an(\"object\");",
+									"    pm.expect(book.ratings).to.have.property(\"average\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"count\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_1\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_2\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_3\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_4\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_5\").that.is.a(\"number\");",
+									"    ",
+									"    pm.expect(book).to.have.property(\"icons\").that.is.an(\"object\");",
+									"    pm.expect(book.icons).to.have.property(\"large\").that.is.a(\"string\");",
+									"    pm.expect(book.icons).to.have.property(\"small\").that.is.a(\"string\");",
+									"});",
+									"",
+									"",
+									"pm.test(\"Response is Good Request\", () => {",
+									"    pm.response.to.have.status(200);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoxLCJpZCI6OSwiaWF0IjoxNzMxMTI2NTg1LCJleHAiOjE3MzIzMzYxODV9.rEebNA8row0u-jCKSBjItyfxZtv2tnW8XyYSuK4T6mw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/isbn/9780439023480",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"isbn",
+								"9780439023480"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/isbn/abc",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Bad request with invalid isbn\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid or missing ISBN parameter - please provide a 13-digit number.\");",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/isbn/abc",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"isbn",
+								"abc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/isbn/1111111111111",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User search for book unaviable in DB\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Book not found.\");",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/isbn/1111111111111",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"isbn",
+								"1111111111111"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/isbn/ABC (no token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with no access token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Auth token is not supplied\");",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/isbn/ABC (no token)",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"isbn",
+								"ABC (no token)"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/isbn/9780439023480 (invalid token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with invalid token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Token is not valid\");",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "acc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/isbn/9780439023480",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"isbn",
+								"9780439023480"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_GET_authors",
+			"item": [
+				{
+					"name": "localhost:4000/c/books/author/Jane Austen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response includes books array with correct length and structure\", () => {",
+									"    const response = pm.response.json();",
+									"",
+									"    pm.expect(response).to.be.an(\"array\");",
+									"",
+									"    pm.expect(response.length).to.equal(9);",
+									"",
+									"    ",
+									"",
+									"    response.forEach((book) => {",
+									"        pm.expect(book).to.have.property(\"isbn13\");",
+									"        pm.expect(book).to.have.property(\"authors\");",
+									"        pm.expect(book).to.have.property(\"original_title\");",
+									"        pm.expect(book).to.have.property(\"title\");",
+									"",
+									"        pm.expect(book).to.have.property(\"ratings\").that.is.an(\"object\");",
+									"        pm.expect(book.ratings).to.have.property(\"average\");",
+									"        pm.expect(book.ratings).to.have.property(\"count\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_1\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_2\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_3\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_4\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_5\");",
+									"",
+									"        pm.expect(book).to.have.property(\"icons\").that.is.an(\"object\");",
+									"        pm.expect(book.icons).to.have.property(\"large\");",
+									"        pm.expect(book.icons).to.have.property(\"small\");",
+									"    });",
+									"",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/author/Jane Austen",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"author",
+								"Jane Austen"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/author/12",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Search for invalid authors\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid Author.\");",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/author/12",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"author",
+								"12"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/author/ABC",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Search for invalid authors\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"No books found for this author.\");",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/author/ABC",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"author",
+								"ABC"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/author/ABC (no token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with no access token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Auth token is not supplied\");",
+									"    pm.response.to.have.status(401);",
+									"}); "
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/author/ABC (no token)",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"author",
+								"ABC (no token)"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/author/Jane Austen (invalid token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with invalid token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Token is not valid\");",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "acc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/author/Jane Austen",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"author",
+								"Jane Austen"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_GET_original_title",
+			"item": [
+				{
+					"name": "localhost:4000/c/books/original_title/The Hunger Games",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// pm.test(\"Response includes specified elements\", () => {",
+									"//     const body = pm.response.json();",
+									"",
+									"//     // Ensure the response contains \"books\"",
+									"//     pm.expect(body).to.have.ownProperty(\"books\");",
+									"",
+									"//     // Ensure each book object has the \"isbn13\" property",
+									"//     pm.expect(body.books[0]).to.have.ownProperty(\"isbn13\");",
+									"//     pm.expect(body.books[0]).to.have.ownProperty(\"authors\");",
+									"//     pm.expect(body.books[0]).to.have.ownProperty(\"original_title\");",
+									"//     pm.expect(body.books[0]).to.have.ownProperty(\"title\");",
+									"//     pm.expect(body.books[0]).to.have.ownProperty(\"ratings\");",
+									"//     pm.expect(body.books[0]).to.have.ownProperty(\"icons\");",
+									"",
+									"//     pm.response.to.have.status(200);",
+									"",
+									"// });",
+									"",
+									"pm.test(\"Response includes specified elements\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.be.an(\"array\").that.is.not.empty;",
+									"",
+									"    const book = body[0];",
+									"",
+									"    pm.expect(book).to.have.property(\"isbn13\").that.is.a(\"number\");",
+									"    pm.expect(book).to.have.property(\"authors\").that.is.a(\"string\");",
+									"    pm.expect(book).to.have.property(\"publication\").that.is.a(\"number\");",
+									"    pm.expect(book).to.have.property(\"original_title\").that.is.a(\"string\");",
+									"    pm.expect(book).to.have.property(\"title\").that.is.a(\"string\");",
+									"",
+									"    pm.expect(book).to.have.property(\"ratings\").that.is.an(\"object\");",
+									"    pm.expect(book.ratings).to.have.property(\"average\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"count\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_1\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_2\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_3\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_4\").that.is.a(\"number\");",
+									"    pm.expect(book.ratings).to.have.property(\"rating_5\").that.is.a(\"number\");",
+									"",
+									"    pm.expect(book).to.have.property(\"icons\").that.is.an(\"object\");",
+									"    pm.expect(book.icons).to.have.property(\"large\").that.is.a(\"string\");",
+									"    pm.expect(book.icons).to.have.property(\"small\").that.is.a(\"string\");",
+									"});",
+									"",
+									"",
+									"pm.test(\"Response is Good Request\", () => {",
+									"    pm.response.to.have.status(200);",
+									"})",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/original_title/The Hunger Games",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"original_title",
+								"The Hunger Games"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/original_title/The Jungle of T1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User search for book unaviable in DB\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Book not found.\");",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/original_title/The Jungle of T1",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"original_title",
+								"The Jungle of T1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/original_title/1234",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User search for book unaviable in DB\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Book not found.\");",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/original_title/1234",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"original_title",
+								"1234"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/original_title/The Hunger Games (No token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with no access token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Auth token is not supplied\");",
+									"    pm.response.to.have.status(401);",
+									"}); "
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/original_title/The Hunger Games",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"original_title",
+								"The Hunger Games"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/author/Jane Austen (invalid Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with invalid token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Token is not valid\");",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "abc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/c/books/original_title/The Hunger Games",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"original_title",
+								"The Hunger Games"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_GET_ratings",
+			"item": [
+				{
+					"name": "localhost:4000/c/books/average_rating/3.5",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response include specific elements\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"book\").that.is.an(\"array\");",
+									"    pm.expect(body.book.length).to.equal(15);",
+									"",
+									"    body.book.forEach((book) => {",
+									"        pm.expect(book).to.have.property(\"isbn13\");",
+									"        pm.expect(book).to.have.property(\"authors\");",
+									"        pm.expect(book).to.have.property(\"original_title\");",
+									"        pm.expect(book).to.have.property(\"title\");",
+									"",
+									"        pm.expect(book).to.have.property(\"ratings\").that.is.an(\"object\");",
+									"        pm.expect(book.ratings).to.have.property(\"average\");",
+									"        pm.expect(book.ratings).to.have.property(\"count\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_1\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_2\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_3\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_4\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_5\");",
+									"",
+									"        pm.expect(book).to.have.property(\"icons\").that.is.an(\"object\");",
+									"        pm.expect(book.icons).to.have.property(\"large\");",
+									"        pm.expect(book.icons).to.have.property(\"small\");",
+									"",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/average_rating/3.5",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"average_rating",
+								"3.5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/books/average_rating/6.0",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"No Books found with given rating\");",
+									"    pm.response.to.have.status(404)",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/average_rating/6.0",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"average_rating",
+								"6.0"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/average_rating/a",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid Average Rating\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/average_rating/a",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"average_rating",
+								"a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/average_rating/3.5 (invalid token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with invalid token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Token is not valid\");",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "abc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/average_rating/3.5",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"average_rating",
+								"3.5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/average_rating/3.5 (no token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with no access token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Auth token is not supplied\");",
+									"    pm.response.to.have.status(401);",
+									"}); "
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/average_rating/3.5",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"average_rating",
+								"3.5"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_GET_publication",
+			"item": [
+				{
+					"name": "localhost:4000/c/books/publication_year/2010",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response includes expected structure and elements\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"book\").that.is.an(\"array\");",
+									"",
+									"    pm.expect(body.book.length).to.be.greaterThan(0);",
+									"",
+									"    const sampleBooks = body.book.slice(0, 5); // Test first 5 book result",
+									"",
+									"    sampleBooks.forEach((book) => {",
+									"        pm.expect(book).to.have.property(\"isbn13\");",
+									"        pm.expect(book).to.have.property(\"authors\");",
+									"        pm.expect(book).to.have.property(\"original_title\");",
+									"        pm.expect(book).to.have.property(\"title\");",
+									"",
+									"        pm.expect(book).to.have.property(\"ratings\");",
+									"        pm.expect(book.ratings).to.have.property(\"average\");",
+									"        pm.expect(book.ratings).to.have.property(\"count\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_1\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_2\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_3\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_4\");",
+									"        pm.expect(book.ratings).to.have.property(\"rating_5\");",
+									"",
+									"        pm.expect(book).to.have.property(\"icons\");",
+									"        pm.expect(book.icons).to.have.property(\"large\");",
+									"        pm.expect(book.icons).to.have.property(\"small\");",
+									"    });",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/publication/2010",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"publication",
+								"2010"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/publication_year/2045",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"No books found with given publication\");",
+									"    pm.response.to.have.status(404);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/publication/2045",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"publication",
+								"2045"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/publication_year/2025",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"No books found with given publication\");",
+									"    pm.response.to.have.status(404);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/publication/2025",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"publication",
+								"2025"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/publication_year/two thousand and one",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid Year\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNDg3MjksImV4cCI6MTczMjI1ODMyOX0._nXcx24FbpRkqNMnD2l3pVDahYuHI2_I4iyBJJEmJ84",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/publication/two thousand and one",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"publication",
+								"two thousand and one"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/publication/2010 (Invalid Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with invalid token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Token is not valid\");",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "abc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/publication/2010 ",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"publication",
+								"2010 "
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/c/books/publication_year/2010 (no token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User access with no access token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"success\");",
+									"    pm.expect(body.success).to.equal(false);",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Auth token is not supplied\");",
+									"    pm.response.to.have.status(401);",
+									"}); "
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/publication_year/2010 ",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"publication_year",
+								"2010 "
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_POST_addBook",
+			"item": [
+				{
+					"name": "New Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The user entered valid input and token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"entry\");",
+									"",
+									"    pm.expect(body.entry).to.have.ownProperty(\"isbn13\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"authors\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"publication\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"original_title\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"title\");",
+									"",
+									"    pm.expect(body.entry).to.have.ownProperty(\"ratings\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"average\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"count\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_1\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_2\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_3\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_4\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_5\")",
+									"",
+									"    pm.expect(body.entry).to.have.ownProperty(\"icons\");",
+									"    pm.expect(body.entry.icons).to.have.ownProperty(\"large\");",
+									"    pm.expect(body.entry.icons).to.have.ownProperty(\"small\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isbn13\": \"1111111111111\",\n    \"authors\": \"Huy Huynh\",\n    \"publication_year\": \"2024\",\n    \"original_title\": \"Sample Original Title\",\n    \"title\": \"Sample Book Title\",\n    \"rating_avg\": 4.5,\n    \"rating_count\": 120,\n    \"rating_1_star\": 5,\n    \"rating_2_star\": 10,\n    \"rating_3_star\": 15,\n    \"rating_4_star\": 40,\n    \"rating_5_star\": 50,\n    \"image_url\": \"https://example.com/image.jpg\",\n    \"image_small_url\": \"https://example.com/small-image.jpg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/c/books/book",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"book"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_POST_login",
+			"item": [
+				{
+					"name": "localhost:4000/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"This tests login\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"accessToken\");",
+									"    pm.expect(body).to.have.ownProperty(\"id\");",
+									"})",
+									"",
+									"const body = pm.response.json();",
+									"token = body['accessToken']",
+									"pm.globals.set(\"token\", token);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"tonyle@uw.edu\",\n    \"password\" : \"tonyle123!!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/login",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/login (Failed)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid or Missing Required Information\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"tonyle@uw.edu\",\n    \"password\" : \"tonyle123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/login",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/login (Failed) Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid or Missing Required Information\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"tonyleuw.edu\",\n    \"password\" : \"tonyle123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/login",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_POST_register",
+			"item": [
+				{
+					"name": "localhost:4000/register (one-time test)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"This tests login\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"accessToken\");",
+									"    pm.expect(body).to.have.ownProperty(\"id\");",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\" : \"Tony\",\n    \"lastname\" : \"Le\",\n    \"username\": \"tonyle\",\n    \"password\" : \"tonyle123!\",\n    \"email\" : \"tonyle@uw.edu\",\n    \"phone\" : \"1234567890\",\n    \"role\" : 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/register",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/register (Missing Email)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid or missing email  - please refer to documentation\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\" : \"Tony\",\n    \"lastname\" : \"Le\",\n    \"username\": \"tonyle\",\n    \"password\" : \"tonyle123!\",\n    \"email\" : \"\",\n    \"phone\" : \"1234567890\",\n    \"role\" : 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/register",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/register (Missing Password)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid or missing password  - please refer to documentation\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\" : \"Tony\",\n    \"lastname\" : \"Le\",\n    \"username\": \"tonyle\",\n    \"password\" : \"\",\n    \"email\" : \"tonyle@uw.edu\",\n    \"phone\" : \"1234567890\",\n    \"role\" : 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/register",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/register (already registered)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Username exists\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\" : \"Tony\",\n    \"lastname\" : \"Le\",\n    \"username\": \"tonyle\",\n    \"password\" : \"tonyle123!\",\n    \"email\" : \"tonyle@uw.edu\",\n    \"phone\" : \"1234567890\",\n    \"role\" : 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/register",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_PUT_change_password",
+			"item": [
+				{
+					"name": "localhost:4000/change_password (Success, one-time test)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"This tests change password\", () => {",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.ownProperty(\"accessToken\");",
+									"    pm.expect(body).to.have.ownProperty(\"id\");",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"tonyle@uw.edu\",\n    \"password\" : \"tonyle123!!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/change_password",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"change_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/change_password (Failed, same password)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Credentials did match, no new password was created\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"tonyle@uw.edu\",\n    \"password\" : \"tonyle123!!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/change_password",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"change_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:4000/change_password (Failed, missing info)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User send request with invalid input: \", () => {",
+									"    const body = pm.response.json();",
+									"    ",
+									"    pm.expect(body).to.have.ownProperty(\"message\");",
+									"    pm.expect(body.message).to.equal(\"Invalid or Missing Required Information\");",
+									"    pm.response.to.have.status(400);",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"\",\n    \"password\" : \"tonyle123!!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:4000/change_password",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"change_password"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_UPDATE_ratings",
+			"item": [
+				{
+					"name": "Get Ratings",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/books/isbn/9781590304500",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"books",
+								"isbn",
+								"9781590304500"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Book Rating",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/ratings/9781590304500/1000/0/0/0/0",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"ratings",
+								"9781590304500",
+								"1000",
+								"0",
+								"0",
+								"0",
+								"0"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test_DELETE",
+			"item": [
+				{
+					"name": "localhost:4000/c/books/isbn/9780439023480",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The user entered valid input and token\", () => {",
+									"    const body = pm.response.json();",
+									"",
+									"    pm.expect(body).to.have.ownProperty(\"entry\");",
+									"",
+									"    pm.expect(body.entry).to.have.ownProperty(\"isbn13\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"authors\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"publication\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"original_title\");",
+									"    pm.expect(body.entry).to.have.ownProperty(\"title\");",
+									"",
+									"    pm.expect(body.entry).to.have.ownProperty(\"ratings\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"average\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"count\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_1\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_2\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_3\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_4\");",
+									"    pm.expect(body.entry.ratings).to.have.ownProperty(\"rating_5\")",
+									"",
+									"    pm.expect(body.entry).to.have.ownProperty(\"icons\");",
+									"    pm.expect(body.entry.icons).to.have.ownProperty(\"large\");",
+									"    pm.expect(body.entry.icons).to.have.ownProperty(\"small\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVG9ueSIsInJvbGUiOjMsImlkIjo1LCJpYXQiOjE3MzEwNTE3MzcsImV4cCI6MTczMjI2MTMzN30.d5ErSsBIEPnw1k0rkj3smFAToyxpRac7uibKpjVYVuY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:4000/c/books/delete/1/10/9780439023480",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"c",
+								"books",
+								"delete",
+								"1",
+								"10",
+								"9780439023480"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
