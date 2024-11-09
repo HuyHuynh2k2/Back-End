@@ -478,7 +478,7 @@ bookRouter.get(
         const limit: number = parseInt(request.params.limit, 10);
         const offset: number = (page - 1) * limit;
 
-        const theQuery = 'SELECT * FROM BOOKS LIMIT $1 OFFSET $2';
+        const theQuery = 'SELECT * FROM BOOKS A INNER JOIN BOOKAUTHORS B ON A.ISBN13 = B.ISBN INNER JOIN AUTHORS C ON B.AUTHORID = C.AUTHORID GROUP BY A.ISBN13, A.TITLE LIMIT $1 OFFSET $2';
         const values = [limit, offset];
 
         pool.query(theQuery, values)
