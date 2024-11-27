@@ -12,6 +12,7 @@ import {
     validationFunctions,
     credentialingFunctions,
 } from '../../core/utilities';
+import e from 'express';
 
 const isStringProvided = validationFunctions.isStringProvided;
 const isNumberProvided = validationFunctions.isNumberProvided;
@@ -206,10 +207,22 @@ registerRouter.post(
                         expiresIn: '14 days', // expires in 14 days
                     }
                 );
+                const firstName = request.body.firstname
+                const lastName = request.body.lastname
+                const userName = request.body.username
+                const email = request.body.email
+                const phone = request.body.phone
+                const role = request.body.role
                 //We successfully added the user!
                 response.status(201).send({
                     accessToken,
                     id: request.id,
+                    firstname: firstName,
+                    lastname: lastName,
+                    username: userName,
+                    email: email,
+                    phone: phone,
+                    role: role
                 });
             })
             .catch((error) => {
