@@ -110,10 +110,22 @@ signinRouter.post(
                             expiresIn: '14 days', // expires in 14 days
                         }
                     );
+                    const firstName = result.rows[0].firstname;
+                    const lastName = result.rows[0].lastname;
+                    const userName = result.rows[0].username;
+                    const email = result.rows[0].email;
+                    const phone = result.rows[0].phone;
+                    const role = result.rows[0].role;
                     //package and send the results
-                    response.json({
+                    response.status(200).json({
                         accessToken,
                         id: result.rows[0].account_id,
+                        firstname: firstName,
+                        lastname: lastName,
+                        username: userName,
+                        email: email,
+                        phone: phone,
+                        role: role,
                     });
                 } else {
                     //credentials dod not match
@@ -147,7 +159,7 @@ signinRouter.post(
  * @apiError (400: Malformed Authorization Header) {String} message "Malformed Authorization Header"
  * @apiError (404: User Not Found) {String} message "User not found"
  * @apiError (400: Invalid Credentials) {String} message "Credentials did match, no new password was created"
- * 
+ *
  */
 signinRouter.put(
     '/change_password',
@@ -165,15 +177,13 @@ signinRouter.put(
     },
     async (request: AuthRequest, response: Response) => {
         //get the old salted hashed password from the database to compare it with the new password
-        const theQuery = 
-        `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
+        const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
         FROM Account_Credential
         INNER JOIN Account 
         ON Account_Credential.account_id=Account.account_id 
         WHERE Account.email=$1`;
         const values = [request.body.email];
-        pool.query(theQuery, values)
-        .then((result) => {
+        pool.query(theQuery, values).then((result) => {
             if (result.rowCount == 0) {
                 response.status(404).send({
                     message: 'User not found',
@@ -224,13 +234,11 @@ signinRouter.put(
                 });
 
                 //update the account in the database with the new salted hashed password
-                const theQuery = 
-                `UPDATE Account_Credential 
+                const theQuery = `UPDATE Account_Credential 
                 SET salted_hash = $1
                 WHERE account_id = $2`;
                 const values = [providedSaltedHash, result.rows[0].account_id];
-                pool.query(theQuery, values)
-                .catch((error) => {
+                pool.query(theQuery, values).catch((error) => {
                     //log the error
                     console.error('BD query error on Put password');
                     console.log(error);
@@ -241,10 +249,11 @@ signinRouter.put(
             } else {
                 //credentials did match => old password was still used
                 response.status(400).send({
-                    message: 'Credentials did match, no new password was created',
+                    message:
+                        'Credentials did match, no new password was created',
                 });
             }
-        })
+        });
     }
 );
 

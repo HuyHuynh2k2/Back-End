@@ -207,12 +207,12 @@ registerRouter.post(
                         expiresIn: '14 days', // expires in 14 days
                     }
                 );
-                const firstName = request.body.firstname
-                const lastName = request.body.lastname
-                const userName = request.body.username
-                const email = request.body.email
-                const phone = request.body.phone
-                const role = request.body.role
+                const firstName = request.body.firstname;
+                const lastName = request.body.lastname;
+                const userName = request.body.username;
+                const email = request.body.email;
+                const phone = request.body.phone;
+                const role = request.body.role;
                 //We successfully added the user!
                 response.status(201).send({
                     accessToken,
@@ -222,7 +222,7 @@ registerRouter.post(
                     username: userName,
                     email: email,
                     phone: phone,
-                    role: role
+                    role: role,
                 });
             })
             .catch((error) => {
