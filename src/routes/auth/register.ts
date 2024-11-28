@@ -13,6 +13,7 @@ import {
     credentialingFunctions,
 } from '../../core/utilities';
 import e from 'express';
+import { IUser } from '../../core/models';
 
 const isStringProvided = validationFunctions.isStringProvided;
 const isNumberProvided = validationFunctions.isNumberProvided;
@@ -207,22 +208,18 @@ registerRouter.post(
                         expiresIn: '14 days', // expires in 14 days
                     }
                 );
-                const firstName = request.body.firstname;
-                const lastName = request.body.lastname;
-                const userName = request.body.username;
-                const email = request.body.email;
-                const phone = request.body.phone;
-                const role = request.body.role;
+
+                const user = {
+                    id: request.body.id,
+                    name: request.body.firstname,
+                    email: request.body.email,
+                    role: request.body.role,
+                };
+
                 //We successfully added the user!
                 response.status(201).send({
-                    accessToken,
-                    id: request.id,
-                    firstname: firstName,
-                    lastname: lastName,
-                    username: userName,
-                    email: email,
-                    phone: phone,
-                    role: role,
+                    accessToken: accessToken,
+                    user: user,
                 });
             })
             .catch((error) => {
