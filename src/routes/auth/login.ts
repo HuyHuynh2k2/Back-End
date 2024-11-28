@@ -110,22 +110,18 @@ signinRouter.post(
                             expiresIn: '14 days', // expires in 14 days
                         }
                     );
-                    const firstName = result.rows[0].firstname;
-                    const lastName = result.rows[0].lastname;
-                    const userName = result.rows[0].username;
-                    const email = result.rows[0].email;
-                    const phone = result.rows[0].phone;
-                    const role = result.rows[0].role;
+
+                    const user = {
+                        name: result.rows[0].firstname,
+                        email: result.rows[0].email,
+                        role: result.rows[0].role,
+                        id: result.rows[0].account_id,
+                    };
+
                     //package and send the results
                     response.status(200).json({
-                        accessToken,
-                        id: result.rows[0].account_id,
-                        firstname: firstName,
-                        lastname: lastName,
-                        username: userName,
-                        email: email,
-                        phone: phone,
-                        role: role,
+                        accessToken: accessToken,
+                        user: user,
                     });
                 } else {
                     //credentials dod not match
