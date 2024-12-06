@@ -157,12 +157,107 @@ signinRouter.post(
  * @apiError (400: Invalid Credentials) {String} message "Credentials did match, no new password was created"
  *
  */
+// signinRouter.put(
+//     '/change_password',
+//     (request: AuthRequest, response: Response, next: NextFunction) => {
+//         if (
+//             isValidEmail(request.body.email) &&
+//             isValidPassword(request.body.password)
+//         ) {
+//             next();
+//         } else {
+//             response.status(400).send({
+//                 message: 'Invalid or Missing Required Information',
+//             });
+//         }
+//     },
+//     async (request: AuthRequest, response: Response) => {
+//         //get the old salted hashed password from the database to compare it with the new password
+//         const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
+//         FROM Account_Credential
+//         INNER JOIN Account 
+//         ON Account_Credential.account_id=Account.account_id 
+//         WHERE Account.email=$1`;
+//         const values = [request.body.email];
+//         pool.query(theQuery, values).then((result) => {
+//             if (result.rowCount == 0) {
+//                 response.status(404).send({
+//                     message: 'User not found',
+//                 });
+//                 return;
+//             } else if (result.rowCount > 1) {
+//                 //log the error
+//                 console.error(
+//                     'DB Query error on sign in: too many results returned'
+//                 );
+//                 response.status(500).send({
+//                     message: 'server error - contact support',
+//                 });
+//                 return;
+//             }
+
+//             //Retrieve the salt used to create the salted-hash provided from the DB
+//             const salt = result.rows[0].salt;
+
+//             //Retrieve the salted-hash password provided from the DB
+//             const storedSaltedHash = result.rows[0].salted_hash;
+
+//             //Generate a hash based on the stored salt and the provided password
+//             const providedSaltedHash = generateHash(
+//                 request.body.password,
+//                 salt
+//             );
+
+//             //Was our salted hash unique from their salted hash?
+//             if (storedSaltedHash !== providedSaltedHash) {
+//                 //unique credentials => get a new JWT
+//                 const accessToken = jwt.sign(
+//                     {
+//                         name: result.rows[0].firstname,
+//                         role: result.rows[0].account_role,
+//                         id: result.rows[0].account_id,
+//                     },
+//                     key.secret,
+//                     {
+//                         expiresIn: '14 days', // expires in 14 days
+//                     }
+//                 );
+
+//                 //package and send the results
+//                 response.json({
+//                     accessToken,
+//                     id: result.rows[0].account_id,
+//                 });
+
+//                 //update the account in the database with the new salted hashed password
+//                 const theQuery = `UPDATE Account_Credential 
+//                 SET salted_hash = $1
+//                 WHERE account_id = $2`;
+//                 const values = [providedSaltedHash, result.rows[0].account_id];
+//                 pool.query(theQuery, values).catch((error) => {
+//                     //log the error
+//                     console.error('BD query error on Put password');
+//                     console.log(error);
+//                     response.status(500).send({
+//                         message: 'Server error - contact support team',
+//                     });
+//                 });
+//             } else {
+//                 //credentials did match => old password was still used
+//                 response.status(400).send({
+//                     message:
+//                         'Credentials did match, no new password was created',
+//                 });
+//             }
+//         });
+//     }
+// );
 signinRouter.put(
     '/change_password',
     (request: AuthRequest, response: Response, next: NextFunction) => {
         if (
             isValidEmail(request.body.email) &&
-            isValidPassword(request.body.password)
+            isValidPassword(request.body.newPassword)
         ) {
             next();
         } else {
@@ -172,84 +267,42 @@ signinRouter.put(
         }
     },
     async (request: AuthRequest, response: Response) => {
-        //get the old salted hashed password from the database to compare it with the new password
-        const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role 
-        FROM Account_Credential
-        INNER JOIN Account 
-        ON Account_Credential.account_id=Account.account_id 
-        WHERE Account.email=$1`;
+        const theQuery = `SELECT salted_hash, salt, account_id 
+                          FROM Account_Credential 
+                          WHERE account_id IN (SELECT account_id FROM Account WHERE email = $1)`;
         const values = [request.body.email];
-        pool.query(theQuery, values).then((result) => {
-            if (result.rowCount == 0) {
-                response.status(404).send({
-                    message: 'User not found',
-                });
-                return;
-            } else if (result.rowCount > 1) {
-                //log the error
-                console.error(
-                    'DB Query error on sign in: too many results returned'
-                );
-                response.status(500).send({
-                    message: 'server error - contact support',
-                });
+
+        try {
+            const result = await pool.query(theQuery, values);
+            if (result.rowCount === 0) {
+                response.status(404).send({ message: 'User not found' });
                 return;
             }
 
-            //Retrieve the salt used to create the salted-hash provided from the DB
-            const salt = result.rows[0].salt;
+            const { salt, salted_hash: storedSaltedHash } = result.rows[0];
 
-            //Retrieve the salted-hash password provided from the DB
-            const storedSaltedHash = result.rows[0].salted_hash;
-
-            //Generate a hash based on the stored salt and the provided password
-            const providedSaltedHash = generateHash(
-                request.body.password,
-                salt
-            );
-
-            //Was our salted hash unique from their salted hash?
+            // Validate old password
+            const providedSaltedHash = generateHash(request.body.oldPassword, salt);
             if (storedSaltedHash !== providedSaltedHash) {
-                //unique credentials => get a new JWT
-                const accessToken = jwt.sign(
-                    {
-                        name: result.rows[0].firstname,
-                        role: result.rows[0].account_role,
-                        id: result.rows[0].account_id,
-                    },
-                    key.secret,
-                    {
-                        expiresIn: '14 days', // expires in 14 days
-                    }
-                );
-
-                //package and send the results
-                response.json({
-                    accessToken,
-                    id: result.rows[0].account_id,
-                });
-
-                //update the account in the database with the new salted hashed password
-                const theQuery = `UPDATE Account_Credential 
-                SET salted_hash = $1
-                WHERE account_id = $2`;
-                const values = [providedSaltedHash, result.rows[0].account_id];
-                pool.query(theQuery, values).catch((error) => {
-                    //log the error
-                    console.error('BD query error on Put password');
-                    console.log(error);
-                    response.status(500).send({
-                        message: 'Server error - contact support team',
-                    });
-                });
-            } else {
-                //credentials did match => old password was still used
-                response.status(400).send({
-                    message:
-                        'Credentials did match, no new password was created',
-                });
+                response.status(400).send({ message: 'Old password does not match' });
+                return;
             }
-        });
+
+            // Generate a new hash for the new password
+            const newSaltedHash = generateHash(request.body.newPassword, salt);
+
+            // Update password in database
+            const updateQuery = `UPDATE Account_Credential 
+                                 SET salted_hash = $1 
+                                 WHERE account_id = $2`;
+            const updateValues = [newSaltedHash, result.rows[0].account_id];
+            await pool.query(updateQuery, updateValues);
+
+            response.status(200).send({ message: 'Password updated successfully' });
+        } catch (error) {
+            console.error('Error updating password:', error);
+            response.status(500).send({ message: 'Server error - contact support' });
+        }
     }
 );
 
